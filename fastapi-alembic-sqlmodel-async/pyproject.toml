@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "fastapi-alembic-sqlmodel-async"
+name = "app"
 version = "0.1.0"
 description = ""
 authors = ["jonra1993 <jon_ra@hotmail.es>"]
