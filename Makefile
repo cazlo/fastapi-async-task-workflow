@@ -25,15 +25,15 @@ help:
 	@echo "    install"
 	@echo "        Install all packages of poetry project locally."
 	@echo "    run-dev-build"
-	@echo "        Run development docker compose and force build containers."
+	@echo "        Run development docker-compose and force build containers."
 	@echo "    run-dev"
-	@echo "        Run development docker compose."
+	@echo "        Run development docker-compose."
 	@echo "    stop-dev"
-	@echo "        Stop development docker compose."
+	@echo "        Stop development docker-compose."
 	@echo "    run-prod"
-	@echo "        Run production docker compose."
+	@echo "        Run production docker-compose."
 	@echo "    stop-prod"
-	@echo "        Run production docker compose."
+	@echo "        Run production docker-compose."
 	@echo "    init-db"
 	@echo "        Init database with sample data."	
 	@echo "    add-dev-migration"
@@ -65,22 +65,22 @@ install:
 	poetry install
 
 run-dev-build:
-	docker compose -f docker-compose-dev.yml up --build
+	docker-compose -f docker-compose-dev.yml up --build
 
 run-dev:
-	docker compose -f docker-compose-dev.yml up
+	docker-compose -f docker-compose-dev.yml up
 
 stop-dev:
-	docker compose -f docker-compose-dev.yml down
+	docker-compose -f docker-compose-dev.yml down
 
 run-prod:
-	docker compose up
+	docker-compose up
 
 stop-prod:
-	docker compose down
+	docker-compose down
 
 init-db:
-	docker compose -f docker-compose-dev.yml exec fastapi_server python app/initial_data.py
+	docker-compose -f docker-compose-dev.yml exec fastapi_server python app/initial_data.py
 
 formatter:
 	cd fastapi-alembic-sqlmodel-async && \
@@ -99,22 +99,22 @@ lint-fix:
 	poetry run ruff app --fix
 
 run-sonarqube:
-	docker compose -f docker-compose-sonarqube.yml up
+	docker-compose -f docker-compose-sonarqube.yml up
 
 run-sonar-scanner:
 	docker run --rm -v "${PWD}/fastapi-alembic-sqlmodel-async:/usr/src" sonarsource/sonar-scanner-cli
 
 stop-sonarqube:
-	docker compose -f docker-compose-sonarqube.yml down
+	docker-compose -f docker-compose-sonarqube.yml down
 
 add-dev-migration:
-	docker compose -f docker-compose-dev.yml exec fastapi_server alembic revision --autogenerate && \
-	docker compose -f docker-compose-dev.yml exec fastapi_server alembic upgrade head
+	docker-compose -f docker-compose-dev.yml exec fastapi_server alembic revision --autogenerate && \
+	docker-compose -f docker-compose-dev.yml exec fastapi_server alembic upgrade head
 
 run-pgadmin:
 	echo "$$SERVERS_JSON" > ./pgadmin/servers.json && \
 	docker volume create pgadmin_data && \
-	docker compose -f pgadmin.yml up
+	docker-compose -f pgadmin.yml up
 	
 load-server-pgadmin:
 	docker exec -it pgadmin python /pgadmin4/setup.py --load-servers servers.json

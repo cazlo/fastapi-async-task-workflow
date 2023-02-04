@@ -5,10 +5,10 @@ api:
 # Entrypoints
 entryPoints:
   web:
-    address: :80
+    address: :8001
 
   websecure:
-    address: :443
+    address: :4430
     
 # Providers
 providers:

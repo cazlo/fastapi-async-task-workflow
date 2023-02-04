@@ -7,14 +7,14 @@ services:
     restart: always
     command: "sh -c 'alembic upgrade head && uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8000'"
     volumes:
-      - ./fastapi-alembic-sqlmodel-async:/code
+      - ./fastapi-alembic-sqlmodel-async:/code:Z
     expose:
       - 8000
     env_file: ".env"
     depends_on:
       - database
-    links:
-      - traefik-proxy:storage.localhost
+#    links:
+#      - traefik-proxy:storage.localhost
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.fastapi_local.entrypoints=web"
@@ -30,7 +30,7 @@ services:
     env_file: ".env"
     user: root
     volumes:
-      - ./db_docker:/bitnami/postgresql
+      - ./db_docker:/bitnami/postgresql:Z
     ports:
       - 5454:5432  # Remove this on production
     expose:
@@ -59,10 +59,10 @@ services:
     expose:
       - 8080
     volumes:
-      - ./static:/code/static
-      - ./nginx-config-files/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx-config-files/app.nginx.template:/etc/nginx/templates/app.nginx.template
-      - "${EB_LOG_BASE_DIR:-./nginx-config-files}/nginx-proxy:/var/log/nginx"
+      - ./static:/code/static:Z
+      - ./nginx-config-files/nginx.conf:/etc/nginx/nginx.conf:Z
+      - ./nginx-config-files/app.nginx.template:/etc/nginx/templates/app.nginx.template:Z
+      - "${EB_LOG_BASE_DIR:-./nginx-config-files}/nginx-proxy:/var/log/nginx:Z"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nginx_local.entrypoints=web"
@@ -74,7 +74,7 @@ services:
     restart: always
     container_name: minio_server
     volumes:
-      - ./minio/data:/data
+      - ./minio/data:/data:Z
     expose:
       - 9000
       - 9091
@@ -101,9 +101,9 @@ services:
     command:
       - "--providers.docker=true"
     ports:
-      - "80:80"
+      - "8001:8001"
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/run/user/1000/podman/podman.sock:/var/run/docker.sock:ro"
       - ./traefik/traefik.yml:/traefik.yml:ro
       - ./traefik/.htpasswd:/.htpasswd
       - "${EB_LOG_BASE_DIR:-./traefik}/traefik-proxy:/logs"
