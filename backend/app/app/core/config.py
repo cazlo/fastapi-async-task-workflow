@@ -56,14 +56,16 @@ class Settings(BaseSettings):
     ) -> Any:
         if isinstance(v, str):
             if v == "":
-                return PostgresDsn.build(
-                    scheme="db+postgresql",
-                    username=info.data["DATABASE_USER"],
-                    password=info.data["DATABASE_PASSWORD"],
-                    host=info.data["DATABASE_HOST"],
-                    port=info.data["DATABASE_PORT"],
-                    path=info.data["DATABASE_CELERY_NAME"],
-                )
+                # celery uses non-standard connetion string which can no longer be built with PostgresDsn
+                return f"db+postgresql://{info.data['DATABASE_USER']}:{info.data['DATABASE_PASSWORD']}@{info.data['DATABASE_HOST']}:{info.data['DATABASE_PORT']}/{info.data['DATABASE_CELERY_NAME']}?sslmode=disable"
+                # return PostgresDsn.build(
+                #     scheme="db+postgresql",
+                #     username=info.data["DATABASE_USER"],
+                #     password=info.data["DATABASE_PASSWORD"],
+                #     host=info.data["DATABASE_HOST"],
+                #     port=info.data["DATABASE_PORT"],
+                #     path=info.data["DATABASE_CELERY_NAME"],
+                # )
         return v
 
     SYNC_CELERY_BEAT_DATABASE_URI: PostgresDsn | str = ""
