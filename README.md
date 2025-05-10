@@ -119,10 +119,6 @@ After that you can show the interpreted path. You can copy that path and set as 
 
 ## Run the project using Docker containers and forcing build containers
 
-*Using docker compose command*
-```sh
-docker compose -f docker-compose-dev.yml up --build
-```
 
 *Using Makefile command*
 ```sh
@@ -131,10 +127,6 @@ make run-dev-build
 
 ## Run project using Docker containers
 
-*Using docker compose command*
-```sh
-docker compose -f docker-compose-dev.yml up
-```
 
 *Using Makefile command*
 ```sh
@@ -224,11 +216,6 @@ Within the **natural_language** endpoints, you can access a sample application t
 
 ## Run Alembic migrations (Only if you change the DB model)
 
-*Using docker compose command*
-```sh
-docker compose -f docker-compose-dev.yml exec fastapi_server alembic revision --autogenerate
-docker compose -f docker-compose-dev.yml exec fastapi_server alembic upgrade head
-```
 
 *Using Makefile command*
 ```sh

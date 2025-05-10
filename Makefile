@@ -67,28 +67,23 @@ install:
 	poetry install
 
 run-dev-build:
-	docker compose -f docker-compose-dev.yml up --build
+	docker compose -f docker-compose.yml --profile dev up --build
 
 run-dev:
-	docker compose -f docker-compose-dev.yml up
+	docker compose -f docker-compose-dev.yml --profile dev up
 
 stop-dev:
-	docker compose -f docker-compose-dev.yml down
+	docker compose -f docker-compose-dev.yml --profile dev down
 
 run-prod:
-	docker compose up
+	docker compose --profile prod up
 
 stop-prod:
-	docker compose down
-
-create-celery-db:
-	if ! docker compose -f docker-compose-dev.yml exec database psql -U ${DATABASE_USER} -h localhost -lqt | cut -d \| -f 1 | grep -qw ${DATABASE_CELERY_NAME}; then \
-		docker compose -f docker-compose-dev.yml exec database createdb -U ${DATABASE_USER} -W ${DATABASE_PASSWORD} -h localhost -O ${DATABASE_USER} ${DATABASE_CELERY_NAME}; \
-	fi
+	docker compose --profile prod down
 	
 
 init-db:
-	docker compose -f docker-compose-dev.yml exec fastapi_server python app/initial_data.py && \
+	docker compose -f docker-compose.yml exec fastapi_server python app/initial_data.py && \
 	echo "Initial data created." 
 
 formatter:
@@ -112,10 +107,10 @@ lint-fix:
 	poetry run ruff app --fix
 
 run-sonarqube:
-	docker compose -f docker-compose-sonarqube.yml up
+	docker compose -f docker-compose.yml --profile sast up
 
 stop-sonarqube:
-	docker compose -f docker-compose-sonarqube.yml down
+	docker compose -f docker-compose-sonarqube.yml --profile sast down
 
 run-sonar-scanner:
 	docker run --rm -v "${PWD}/backend:/usr/src" sonarsource/sonar-scanner-cli -X
@@ -141,4 +136,4 @@ run-test:
 	docker compose -f docker-compose-test.yml up --build
 
 pytest:
-	docker compose -f docker-compose-test.yml exec fastapi_server pytest
+	docker compose -f docker-compose.yml exec fastapi_server pytest

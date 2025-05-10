@@ -1,54 +1,117 @@
-version: '3.8'
-
 services:
-  fastapi_server:
+  fastapi_server_tmpl:
     container_name: fastapi_server
-    image: jrtec/fastapi-alembic-sqlmodel-async:latest
+    image: cazlo/fastapi-async-task-workflow:latest
     restart: always
-    command: "sh -c 'alembic upgrade head && python app/initial_data.py && gunicorn -w 3 -k uvicorn.workers.UvicornWorker app.main:app  --bind 0.0.0.0:8000 --preload --log-level=debug --timeout 120'"
+    command: "sh -c 'python app/initial_data.py && gunicorn -w 3 -k uvicorn.workers.UvicornWorker app.main:app  --bind 0.0.0.0:8000 --preload --log-level=debug --timeout 120'"
     volumes:
       - ./backend/app:/code
     expose:
       - 8000
     env_file: ".env"
+    profiles:
+      - prod
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+      db_migrator:
+        condition: service_completed_successfully
     links:
       - caddy_reverse_proxy:storage.localhost
-  
-  ## You need to set your external database credentials in .env file or uncomment below lines to run database as container  (No recommended because db needs persitence)
-  # database:
-  #   image: bitnami/postgresql
-  #   restart: always
-  #   container_name: database
-  #   env_file: ".env"
-  #   user: root
-  #   volumes:
-  #     - db_docker:/bitnami/postgresql
-  #     - ./create-dbs.sql:/docker-entrypoint-initdb.d/create-dbs.sql
-  #   ports:
-  #     - 5454:5432 # Remove this on production
-  #   expose:
-  #     - 5432
-  #   environment:
-  #     - POSTGRESQL_USERNAME=${DATABASE_USER}
-  #     - POSTGRESQL_PASSWORD=${DATABASE_PASSWORD}
-  #     - POSTGRESQL_DATABASE=${DATABASE_NAME}
 
-      
+  fastapi_server:
+    extends:
+      service: fastapi_server_tmpl
+    container_name: fastapi_server_dev
+    build:
+      context: ./backend
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-true}
+    environment:
+      MODE: testing
+    profiles:
+      - dev
+    command: "sh -c 'uvicorn app.main:app --reload --workers 3 --host 0.0.0.0 --port 8000'"
+
+  db_migrator:
+    container_name: db_migrator
+    image: cazlo/fastapi-async-task-workflow:latest
+    build: ./backend
+    profiles:
+      - dev
+      - prod
+    env_file: ".env"
+    volumes:
+      - ./backend/app:/code
+    depends_on:
+      database:
+        condition: service_healthy
+    command: "sh -c 'alembic upgrade head'"
+
+  database:
+     image: docker.io/postgres:17
+     restart: always
+     container_name: database
+     env_file: ".env"
+     user: root
+     profiles:
+       - dev
+       - prod
+     volumes:
+       - db_docker:/var/lib/postgresql/data
+       - ./create-dbs.sql:/docker-entrypoint-initdb.d/create-dbs.sql
+     ports:
+       - 5454:5432
+     expose:
+       - 5432
+     environment:
+       - POSTGRES_USERNAME=${DATABASE_USER}
+       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+       - POSTGRES_DATABASE=${DATABASE_NAME}
+     healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+       interval: 2s
+       timeout: 5s
+       retries: 10
+       start_period: 10s
+#  database:
+#    image: bitnami/postgresql # todo version lock, use healthcheck
+#    restart: always
+#    container_name: database
+#    env_file: ".env"
+#    user: root
+#    volumes:
+#      - db_docker:/bitnami/postgresql
+#      - ./create-dbs.sql:/docker-entrypoint-initdb.d/create-dbs.sql
+#    ports:
+#      - 5454:5432 # Remove this on production
+#    expose:
+#      - 5432
+#    environment:
+#      - POSTGRESQL_USERNAME=${DATABASE_USER}
+#      - POSTGRESQL_PASSWORD=${DATABASE_PASSWORD}
+#      - POSTGRESQL_DATABASE=${DATABASE_NAME}
+
+
   redis_server:
+    image: docker.io/redis:alpine
     container_name: redis_server
-    image: "redis:alpine"
     restart: always
+    profiles:
+      - dev
+      - prod
     expose:
       - 6379
     env_file: .env
-
 
   celery_worker:
     container_name: celery_worker
     restart: always
     # platform: linux/arm64/v8
+    image: cazlo/fastapi-async-task-workflow:latest
+    profiles:
+      - dev
+      - prod
     build:
       context: ./backend      
       args:
@@ -71,6 +134,9 @@ services:
       args:
         INSTALL_DEV: ${INSTALL_DEV-false}
     command: celery -A app.core.celery beat -l info -S celery_sqlalchemy_scheduler.schedulers:DatabaseScheduler -l info
+    profiles:
+      - dev
+      - prod
     volumes:
       - ./backend/app:/code
       # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery-beat"
@@ -79,11 +145,13 @@ services:
       - redis_server
     env_file: .env
 
-
   minio_server:
     image: minio/minio:latest
     restart: always
     container_name: minio_server
+    profiles:
+      - dev
+      - prod
     volumes:
       - ./minio/data:/data
     expose:
@@ -93,25 +161,43 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BROWSER_REDIRECT_URL: http://stash.localhost
-    command: "server /data --console-address ':9090'"  
+    command: "server /data --console-address ':9090'"
 
   caddy_reverse_proxy:
     container_name: caddy_reverse_proxy
     image: caddy:alpine
     restart: always
     ports:
-      - 80:80      
-      - 443:443
+      - 1080:80
+      - 10443:443
     environment:
       - EXT_ENDPOINT1=${EXT_ENDPOINT1}
       - LOCAL_1=${LOCAL_1}
       - LOCAL_2=${LOCAL_2}
+    profiles:
+      - dev
+      - prod
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - ./static:/code/static
       - caddy_data:/data
       - caddy_config:/config
 
+  sonarqube:
+    container_name: "sonarqube"
+    image: "sonarqube:9.9.2-community"
+    volumes:
+      - ./sonarqube/extensions:/opt/sonarqube/extensions
+      - ./sonarqube/logs:/opt/sonarqube/logs
+      - ./sonarqube/data:/opt/sonarqube/data
+    profiles:
+      - sast
+    expose:
+      - "9000"
+    ports:
+      - "9000:9000"
+
 volumes:
+  db_docker:
   caddy_data:
   caddy_config:
