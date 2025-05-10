@@ -83,7 +83,13 @@ ruff = "^0.0.256"
 pytest = "^7.4.0"
 pytest-asyncio = "^0.21.1"
 mypy = "^1.5.0"
+pytest-cov = "^6.1.1"
+gevent = "^25.4.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.run]
+# https://stackoverflow.com/questions/68826941/python-coverage-for-async-methods
+concurrency = ["thread","gevent"]
