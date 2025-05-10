@@ -1,20 +1,20 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11-slim
+FROM docker.io/python:3.12-alpine3.21 AS runtime
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DEFAULT_TIMEOUT=100
 WORKDIR /code
 # Install Poetry
-RUN apt clean && apt update && apt install curl -y
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python && \
-    cd /usr/local/bin && \
-    ln -s /opt/poetry/bin/poetry && \
-    poetry config virtualenvs.create false
+RUN apk update
+RUN pip install poetry && poetry config virtualenvs.create false
 
 # Copy poetry.lock* in case it doesn't exist in the repo
 COPY app/pyproject.toml app/poetry.lock* /code/
-
-# Allow installing dev dependencies to run tests
-ARG INSTALL_DEV=false
-RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then poetry install --no-root ; else poetry install --no-root --only main ; fi"
+# todo non-root user
+RUN poetry install --no-root --only main
 
 ENV PYTHONPATH=/code
 EXPOSE 8000
+# todo code should be on here
+
+FROM runtime AS test
+
+RUN poetry install --no-root

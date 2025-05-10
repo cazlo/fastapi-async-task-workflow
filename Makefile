@@ -69,13 +69,13 @@ run-dev-build:
 	docker compose -f docker-compose.yml --profile dev up --build
 
 run-dev:
-	docker compose -f docker-compose-dev.yml --profile dev up
+	docker compose -f docker-compose.yml --profile dev up
 
 stop-dev:
-	docker compose -f docker-compose-dev.yml --profile dev down
+	docker compose -f docker-compose.yml --profile dev down
 
 run-prod:
-	docker compose --profile prod up
+	docker compose --profile prod up --build
 
 stop-prod:
 	docker compose --profile prod down
