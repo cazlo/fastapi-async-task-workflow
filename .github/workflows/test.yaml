@@ -1,0 +1,60 @@
+name: Unit test suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+# commented permission only needed for private repository
+#  contents: read
+#  issues: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup .env
+        run: cp .env.example .env
+      - name: Start Development Environment
+        run: make run-dev-build -e DOCKER_COMPOSE_OPTIONS="-d"
+      # todo should capture container logs of this fails somehow
+
+      - name: Initialize Database
+        run: make init-db
+
+      - name: Run Tests
+        run: make pytest
+
+      # human-readable report
+      - name: Upload HTML Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html-report
+          path: backend/app/htmlcov
+          retention-days: 14
+
+      # useful for tools like SonarQube
+      - name: Upload XML Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml-report
+          path: backend/app/coverage.xml
+          retention-days: 14
+
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          test_file_prefix: "+backend/app"
+          files: |
+            backend/app/junit-test-results.xml
+
