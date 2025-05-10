@@ -1,12 +1,5 @@
-import asyncio
 import time
-from uuid import UUID
-from app import crud
 from app.core.celery import celery
-from app.models.hero_model import Hero
-from app.db.session import SessionLocal
-
-# from transformers import pipeline
 
 
 @celery.task(name="tasks.increment", bind=True)
@@ -17,14 +10,15 @@ def increment(self, value: int) -> int:
     return new_value
 
 
-async def get_hero(hero_id: UUID) -> Hero:
-    async with SessionLocal() as session:
-        await asyncio.sleep(5)  # Add a delay of 5 seconds
-        hero = await crud.hero.get(id=hero_id, db_session=session)
-        return hero
-
-
-@celery.task(name="tasks.print_hero")
-def print_hero(hero_id: UUID) -> None:
-    hero = asyncio.get_event_loop().run_until_complete(get_hero(hero_id=hero_id))
-    return hero.id
+# following is an example of calling async code from sync celery tasks
+# async def get_hero(hero_id: UUID) -> Hero:
+#     async with SessionLocal() as session:
+#         await asyncio.sleep(5)  # Add a delay of 5 seconds
+#         hero = await crud.hero.get(id=hero_id, db_session=session)
+#         return hero
+#
+#
+# @celery.task(name="tasks.print_hero")
+# def print_hero(hero_id: UUID) -> None:
+#     hero = asyncio.get_event_loop().run_until_complete(get_hero(hero_id=hero_id))
+#     return hero.id

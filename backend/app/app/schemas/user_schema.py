@@ -1,6 +1,5 @@
 from app.utils.partial import optional
 from app.models.user_model import UserBase
-from app.models.group_model import GroupBase
 from pydantic import BaseModel
 from uuid import UUID
 from enum import Enum
@@ -21,15 +20,9 @@ class IUserUpdate(UserBase):
     pass
 
 
-# This schema is used to avoid circular import
-class IGroupReadBasic(GroupBase):
-    id: UUID
-
-
 class IUserRead(UserBase):
     id: UUID
     role: IRoleRead | None = None
-    groups: list[IGroupReadBasic] | None = []
     image: IImageMediaRead | None
     follower_count: int | None = 0
     following_count: int | None = 0

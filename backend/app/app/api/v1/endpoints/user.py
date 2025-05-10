@@ -2,16 +2,12 @@ from io import BytesIO
 from typing import Annotated
 from uuid import UUID
 from app.utils.exceptions import (
-    IdNotFoundException,
-    SelfFollowedException,
-    UserFollowedException,
-    UserNotFollowedException,
     UserSelfDeleteException,
 )
 from app import crud
 from app.api import deps
 from app.deps import user_deps
-from app.models import User, UserFollow
+from app.models import User
 from app.models.role_model import Role
 from app.utils.minio_client import MinioClient
 from app.utils.resize_image import modify_image
@@ -31,19 +27,14 @@ from app.schemas.response_schema import (
     IGetResponseBase,
     IGetResponsePaginated,
     IPostResponseBase,
-    IPutResponseBase,
     create_response,
 )
 from app.schemas.role_schema import IRoleEnum
-from app.schemas.user_follow_schema import IUserFollowRead
 from app.schemas.user_schema import (
     IUserCreate,
     IUserRead,
     IUserReadWithoutGroups,
     IUserStatus,
-)
-from app.schemas.user_follow_schema import (
-    IUserFollowReadCommon,
 )
 from fastapi_pagination import Params
 from sqlmodel import and_, select, col, or_, text
@@ -97,6 +88,7 @@ async def read_users_list_by_role_name(
         .join(Role, User.role_id == Role.id)
         .where(
             and_(
+                # todo this seems vulnerbale to sql injection
                 col(Role.name).ilike(f"%{role_name}%"),
                 User.is_active == user_status,
                 or_(
@@ -135,215 +127,6 @@ async def get_user_list_order_by_created_at(
         params=params, order_by="created_at"
     )
     return create_response(data=users)
-
-
-@router.get("/following")
-async def get_following(
-    params: Params = Depends(),
-    current_user: User = Depends(deps.get_current_user()),
-) -> IGetResponsePaginated[IUserFollowReadCommon]:
-    """
-    Lists the people who the authenticated user follows.
-    """
-    query = (
-        select(
-            User.id,
-            User.first_name,
-            User.last_name,
-            User.follower_count,
-            User.following_count,
-            UserFollow.is_mutual,
-        )
-        .join(UserFollow, User.id == UserFollow.target_user_id)
-        .where(UserFollow.user_id == current_user.id)
-    )
-    users = await crud.user.get_multi_paginated(query=query, params=params)
-    return create_response(data=users)
-
-
-@router.get(
-    "/following/{user_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_class=Response,
-)
-async def check_is_followed_by_user_id(
-    user: User = Depends(user_deps.is_valid_user),
-    current_user: User = Depends(deps.get_current_user()),
-):
-    """
-    Check if a person is followed by the authenticated user
-    """
-    result = await crud.user_follow.get_follow_by_user_id_and_target_user_id(
-        user_id=user.id, target_user_id=current_user.id
-    )
-    if not result:
-        raise UserNotFollowedException(user_name=user.last_name)
-
-    raise UserFollowedException(target_user_name=user.last_name)
-
-
-@router.get("/followers")
-async def get_followers(
-    params: Params = Depends(),
-    current_user: User = Depends(deps.get_current_user()),
-) -> IGetResponsePaginated[IUserFollowReadCommon]:
-    """
-    Lists the people following the authenticated user.
-    """
-    query = (
-        select(
-            User.id,
-            User.first_name,
-            User.last_name,
-            User.follower_count,
-            User.following_count,
-            UserFollow.is_mutual,
-        )
-        .join(UserFollow, User.id == UserFollow.user_id)
-        .where(UserFollow.target_user_id == current_user.id)
-    )
-    users = await crud.user.get_multi_paginated(params=params, query=query)
-    return create_response(data=users)
-
-
-@router.get("/{user_id}/followers")
-async def get_user_followed_by_user_id(
-    user_id: UUID = Depends(user_deps.is_valid_user_id),
-    params: Params = Depends(),
-    current_user: User = Depends(deps.get_current_user()),
-) -> IGetResponsePaginated[IUserFollowReadCommon]:
-    """
-    Lists the people following the specified user.
-    """
-    query = (
-        select(
-            User.id,
-            User.first_name,
-            User.last_name,
-            User.follower_count,
-            User.following_count,
-            UserFollow.is_mutual,
-        )
-        .join(UserFollow, User.id == UserFollow.user_id)
-        .where(UserFollow.target_user_id == user_id)
-    )
-    users = await crud.user.get_multi_paginated(params=params, query=query)
-    return create_response(data=users)
-
-
-@router.get("/{user_id}/following")
-async def get_user_following_by_user_id(
-    user_id: UUID = Depends(user_deps.is_valid_user_id),
-    params: Params = Depends(),
-    current_user: User = Depends(deps.get_current_user()),
-) -> IGetResponsePaginated[IUserFollowReadCommon]:
-    """
-    Lists the people who the specified user follows.
-    """
-    query = (
-        select(
-            User.id,
-            User.first_name,
-            User.last_name,
-            User.follower_count,
-            User.following_count,
-            UserFollow.is_mutual,
-        )
-        .join(UserFollow, User.id == UserFollow.target_user_id)
-        .where(UserFollow.user_id == user_id)
-    )
-    users = await crud.user.get_multi_paginated(query=query, params=params)
-    return create_response(data=users)
-
-
-@router.get(
-    "/{user_id}/following/{target_user_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_class=Response,
-)
-async def check_a_user_is_followed_another_user_by_id(
-    user_id: UUID,
-    target_user_id: UUID,
-    current_user: User = Depends(deps.get_current_user()),
-):
-    """
-    Check if a user follows another user
-    """
-    if user_id == target_user_id:
-        raise SelfFollowedException()
-
-    user = await crud.user.get(id=user_id)
-    if not user:
-        raise IdNotFoundException(User, id=user_id)
-
-    target_user = await crud.user.get(id=target_user_id)
-    if not target_user:
-        raise IdNotFoundException(User, id=target_user_id)
-
-    result = await crud.user_follow.get_follow_by_user_id_and_target_user_id(
-        user_id=user_id, target_user_id=target_user_id
-    )
-    if not result:
-        raise UserNotFollowedException(
-            user_name=user.last_name, target_user_name=target_user.last_name
-        )
-
-
-@router.put("/following/{target_user_id}")
-async def follow_a_user_by_id(
-    target_user_id: UUID,
-    current_user: User = Depends(deps.get_current_user()),
-) -> IPutResponseBase[IUserFollowRead]:
-    """
-    Following a user
-    """
-    if target_user_id == current_user.id:
-        raise SelfFollowedException()
-    target_user = await crud.user.get(id=target_user_id)
-    if not target_user:
-        raise IdNotFoundException(User, id=target_user_id)
-
-    current_follow_user = (
-        await crud.user_follow.get_follow_by_user_id_and_target_user_id(
-            user_id=current_user.id, target_user_id=target_user_id
-        )
-    )
-    if current_follow_user:
-        raise UserFollowedException(target_user_name=target_user.last_name)
-
-    new_user_follow = await crud.user_follow.follow_a_user_by_target_user_id(
-        user=current_user, target_user=target_user
-    )
-    return create_response(data=new_user_follow)
-
-
-@router.delete("/following/{target_user_id}")
-async def unfollowing_a_user_by_id(
-    target_user_id: UUID,
-    current_user: User = Depends(deps.get_current_user()),
-) -> IDeleteResponseBase[IUserFollowRead]:
-    """
-    Unfollowing a user
-    """
-    if target_user_id == current_user.id:
-        raise SelfFollowedException()
-    target_user = await crud.user.get(id=target_user_id)
-    if not target_user:
-        raise IdNotFoundException(User, id=target_user_id)
-
-    current_follow_user = await crud.user_follow.get_follow_by_target_user_id(
-        user_id=current_user.id, target_user_id=target_user_id
-    )
-
-    if not current_follow_user:
-        raise UserNotFollowedException(user_name=target_user.last_name)
-
-    user_follow = await crud.user_follow.unfollow_a_user_by_id(
-        user_follow_id=current_follow_user.id,
-        user=current_user,
-        target_user=target_user,
-    )
-    return create_response(data=user_follow)
 
 
 @router.get("/{user_id}")

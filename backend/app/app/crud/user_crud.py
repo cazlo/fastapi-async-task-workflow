@@ -7,7 +7,6 @@ from app.core.security import verify_password, get_password_hash
 from pydantic.networks import EmailStr
 from typing import Any
 from app.crud.base_crud import CRUDBase
-from app.crud.user_follow_crud import user_follow as UserFollowCRUD
 from sqlmodel import select
 from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -91,24 +90,6 @@ class CRUDUser(CRUDBase[User, IUserCreate, IUserUpdate]):
             select(self.model).where(self.model.id == id)
         )
         obj = response.scalar_one()
-
-        followings = await UserFollowCRUD.get_follow_by_user_id(user_id=obj.id)
-        if followings:
-            for following in followings:
-                user = await self.get(id=following.target_user_id)
-                user.follower_count -= 1
-                db_session.add(user)
-                await db_session.delete(following)
-
-        followeds = await UserFollowCRUD.get_follow_by_target_user_id(
-            target_user_id=obj.id
-        )
-        if followeds:
-            for followed in followeds:
-                user = await self.get(id=followed.user_id)
-                user.following_count -= 1
-                db_session.add(user)
-                await db_session.delete(followed)
 
         await db_session.delete(obj)
         await db_session.commit()
