@@ -16,5 +16,7 @@ EXPOSE 8000
 # todo code should be on here
 
 FROM runtime AS test
+# needed for celery pytest
+RUN apk add --no-cache gcc musl-dev linux-headers
 
 RUN poetry install --no-root

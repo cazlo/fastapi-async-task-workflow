@@ -1,5 +1,13 @@
 # Project Changelog
 
+## v0.2.0  (2025-05)
+
+- Fixing code rot issues (getting code compiling and all tests passing again)
+- Version locking more dependencies to avoid future code rot issues
+- Multi-stage docker build for test and runtime consistency
+- Single docker-compose with multiple runtime profiles
+- Pytest coverage reporting
+- Python 3.12
 
 ## v0.1.17 (2023-04-01)
 

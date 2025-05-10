@@ -120,7 +120,7 @@ services:
     # platform: linux/arm64/v8
     image: cazlo/fastapi-async-task-workflow:latest
     profiles:
-      - dev
+#      - dev excluded from dev to facilitate gathering test coverage of tasks
       - prod
     build:
       context: ./backend      

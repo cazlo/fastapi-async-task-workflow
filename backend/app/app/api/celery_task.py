@@ -9,9 +9,10 @@ from app.db.session import SessionLocal
 # from transformers import pipeline
 
 
-@celery.task(name="tasks.increment")
-def increment(value: int) -> int:
-    time.sleep(5)
+@celery.task(name="tasks.increment", bind=True)
+def increment(self, value: int) -> int:
+    self.update_state(state="STARTED")
+    time.sleep(value)
     new_value = value + 1
     return new_value
 
