@@ -1,37 +1,30 @@
 import gc
-import logging
 from contextlib import asynccontextmanager
-from typing import Any
-from uuid import UUID, uuid4
 
 from fastapi import (
     FastAPI,
     HTTPException,
     Request,
-    WebSocket,
-    WebSocketDisconnect,
     status,
 )
-from fastapi_async_sqlalchemy import SQLAlchemyMiddleware, db
+from fastapi_async_sqlalchemy import SQLAlchemyMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import WebSocketRateLimiter
 from jwt import DecodeError, ExpiredSignatureError, MissingRequiredClaimError
+
 # from langchain.chat_models import ChatOpenAI
 # from langchain.schema import HumanMessage
 from sqlalchemy.pool import NullPool, AsyncAdaptedQueuePool
 from starlette.middleware.cors import CORSMiddleware
+
 # from transformers import pipeline
 
-from app import crud
 from app.api.deps import get_redis_client
 from app.api.v1.api import api_router as api_router_v1
 from app.core.config import ModeEnum, settings
 from app.core.security import decode_token
-from app.schemas.common_schema import IChatResponse, IUserMessage
 from app.utils.fastapi_globals import GlobalsMiddleware, g
-from app.utils.uuid6 import uuid7
 
 
 async def user_id_identifier(request: Request):

@@ -63,7 +63,6 @@ help:
 
 install:
 	cd backend/app && \
-	poetry shell && \
 	poetry install
 
 run-dev-build:
