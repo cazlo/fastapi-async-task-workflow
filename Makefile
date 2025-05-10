@@ -134,7 +134,7 @@ clean-pgadmin:
 run-test:
 	docker compose -f docker-compose-test.yml up --build
 
-PYTEST_FLAGS = -v
+PYTEST_FLAGS = -v --junitxml=junit-test-results.xml
 COVERAGE_FLAGS = --cov=. --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html
 pytest:
 	docker compose -f docker-compose.yml exec fastapi_server pytest $(PYTEST_FLAGS) $(COVERAGE_FLAGS)
