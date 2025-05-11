@@ -3,9 +3,15 @@
 from celery import Celery
 from app.core.config import settings
 
+# Get RabbitMQ credentials from settings or use defaults
+rabbitmq_user = getattr(settings, "RABBITMQ_USER", "guest")
+rabbitmq_password = getattr(settings, "RABBITMQ_PASSWORD", "guest")
+rabbitmq_host = getattr(settings, "RABBITMQ_HOST", "rabbitmq")
+rabbitmq_port = getattr(settings, "RABBITMQ_PORT", 5672)
+
 celery = Celery(
     "async_task",
-    broker=f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}",
+    broker=f"amqp://{rabbitmq_user}:{rabbitmq_password}@{rabbitmq_host}:{rabbitmq_port}//",
     backend=str(settings.SYNC_CELERY_DATABASE_URI),
     include="app.api.celery_task",  # route where tasks are defined
 )

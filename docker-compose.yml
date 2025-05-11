@@ -127,6 +127,30 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+  
+  rabbitmq:
+    image: docker.io/rabbitmq:3.13-management
+    container_name: rabbitmq
+    restart: always
+    profiles:
+      - dev
+      - prod
+    expose:
+      - 5672
+      - 15672
+    ports:
+      - "15672:15672"  # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
   celery_worker:
     container_name: celery_worker
@@ -147,7 +171,7 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      redis_server:
+      rabbitmq:
         condition: service_healthy
     env_file: .env
   
@@ -169,7 +193,7 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      redis_server:
+      rabbitmq:
         condition: service_healthy
     env_file: .env
 
@@ -229,6 +253,7 @@ volumes:
   db_docker:
   caddy_data:
   caddy_config:
+  rabbitmq_data:
 
 networks:
   default:
