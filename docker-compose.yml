@@ -112,7 +112,7 @@ services:
 
 
   redis_server:
-    image: docker.io/redis:alpine
+    image: docker.io/valkey/valkey:8.1-alpine3.21
     container_name: redis_server
     restart: always
     profiles:
@@ -121,6 +121,12 @@ services:
     expose:
       - 6379
     env_file: .env
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   celery_worker:
     container_name: celery_worker
@@ -139,8 +145,10 @@ services:
       - ./backend/app:/code
       # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery"
     depends_on:
-      - database
-      - redis_server
+      database:
+        condition: service_healthy
+      redis_server:
+        condition: service_healthy
     env_file: .env
   
   celery_beat:  #Good for crontab and schedule tasks
@@ -159,8 +167,10 @@ services:
       - ./backend/app:/code
       # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery-beat"
     depends_on:
-      - database
-      - redis_server
+      database:
+        condition: service_healthy
+      redis_server:
+        condition: service_healthy
     env_file: .env
 
   minio_server:
