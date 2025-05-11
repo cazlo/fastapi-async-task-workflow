@@ -5,7 +5,6 @@ from app.models.media_model import Media
 from app.models.image_media_model import ImageMedia
 from app.core.security import verify_password, get_password_hash
 from pydantic.networks import EmailStr
-from typing import Any
 from app.crud.base_crud import CRUDBase
 from sqlmodel import select
 from uuid import UUID
@@ -41,12 +40,15 @@ class CRUDUser(CRUDBase[User, IUserCreate, IUserUpdate]):
         return db_obj
 
     async def update_is_active(
-        self, *, db_obj: list[User], obj_in: int | str | dict[str, Any]
-    ) -> User | None:
-        response = None
-        db_session = super().get_db().session
+        self,
+        *,
+        db_obj: list[User],
+        is_active: bool,
+        db_session: AsyncSession | None = None,
+    ) -> list[User]:
+        response = []
         for x in db_obj:
-            x.is_active = obj_in.is_active
+            x.is_active = is_active
             db_session.add(x)
             await db_session.commit()
             await db_session.refresh(x)

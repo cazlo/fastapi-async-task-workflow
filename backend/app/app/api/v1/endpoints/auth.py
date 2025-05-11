@@ -33,11 +33,9 @@ async def login(
     """
     user = await crud.user.authenticate(email=email, password=password)
     if not user:
-        raise HTTPException(
-            status_code=400, detail="Email or Password incorrect"
-        )  # todo 401
+        raise HTTPException(status_code=401, detail="Email or Password incorrect")
     elif not user.is_active:
-        raise HTTPException(status_code=400, detail="User is inactive")  # todo 403
+        raise HTTPException(status_code=403, detail="User is inactive")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
@@ -96,7 +94,7 @@ async def change_password(
     """
 
     if not verify_password(current_password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid Current Password")
+        raise HTTPException(status_code=401, detail="Invalid Current Password")
 
     if verify_password(new_password, current_user.hashed_password):
         raise HTTPException(
@@ -213,9 +211,9 @@ async def login_access_token(
         email=form_data.username, password=form_data.password
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
     elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(status_code=403, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
         user.id, expires_delta=access_token_expires

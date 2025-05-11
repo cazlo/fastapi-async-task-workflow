@@ -12,9 +12,10 @@ class TestPostLogin:
     @pytest.mark.parametrize(
         "method, endpoint, data, expected_status, expected_response",
         [
-            ("post", "/auth/login", {"email": "incorrect_email@gmail.com", "password": "123456"}, 400, {"detail": "Email or Password incorrect"}),
+            ("post", "/auth/login", {"email": "incorrect_email@gmail.com", "password": "123456"}, 401, {"detail": "Email or Password incorrect"}),
             ("post", "/auth/login", {"email": settings.FIRST_SUPERUSER_EMAIL, "password": settings.FIRST_SUPERUSER_PASSWORD}, 200, None),
-            ("post", "/auth/login", {"email": settings.FIRST_SUPERUSER_EMAIL, "password": "foobar"}, 400, None),
+            ("post", "/auth/login", {"email": settings.FIRST_SUPERUSER_EMAIL, "password": "foobar"}, 401, None),
+            ("post", "/auth/login", {"email": "user@example.com", "password": settings.FIRST_SUPERUSER_PASSWORD}, 403, None),
             ("post", "/auth/new_access_token", {"refresh_token": ""}, 403, {"detail": "Error when decoding the token. Please check your request."})
         ],
     )

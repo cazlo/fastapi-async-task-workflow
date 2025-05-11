@@ -62,3 +62,10 @@ async def init_db(db_session: AsyncSession) -> None:
         if not current_user:
             user["data"].role_id = role.id
             await crud.user.create_with_role(obj_in=user["data"], db_session=db_session)
+        if user["data"].email == "user@example.com":
+            current_user = await crud.user.get_by_email(
+                email=user["data"].email, db_session=db_session
+            )
+            await crud.user.update_is_active(
+                db_obj=[current_user], is_active=False, db_session=db_session
+            )
