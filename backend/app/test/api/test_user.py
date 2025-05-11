@@ -18,7 +18,7 @@ class TestPostLogin:
     )
     def test(self, method, endpoint, data, expected_status, expected_response):
             credentials = {"email": settings.FIRST_SUPERUSER_EMAIL, "password": settings.FIRST_SUPERUSER_PASSWORD}
-            response = test_client.post("/login", json=credentials)
+            response = test_client.post("/auth/login", json=credentials)
             print(response.json)
             access_token = response.json()["data"]["access_token"]
             if method == "get":

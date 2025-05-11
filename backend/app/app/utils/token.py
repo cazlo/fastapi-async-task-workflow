@@ -22,7 +22,7 @@ async def add_token_to_redis(
 async def get_valid_tokens(redis_client: Redis, user_id: UUID, token_type: TokenType):
     token_key = f"user:{user_id}:{token_type}"
     valid_tokens = await redis_client.smembers(token_key)
-    return valid_tokens
+    return [] if not valid_tokens else valid_tokens
 
 
 async def delete_tokens(redis_client: Redis, user: User, token_type: TokenType):

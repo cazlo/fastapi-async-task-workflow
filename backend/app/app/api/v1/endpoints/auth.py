@@ -21,7 +21,7 @@ from app.utils.token import add_token_to_redis, delete_tokens, get_valid_tokens
 router = APIRouter()
 
 
-@router.post("")
+@router.post("/login")
 async def login(
     email: EmailStr = Body(...),
     password: str = Body(...),
@@ -33,9 +33,11 @@ async def login(
     """
     user = await crud.user.authenticate(email=email, password=password)
     if not user:
-        raise HTTPException(status_code=400, detail="Email or Password incorrect")
+        raise HTTPException(
+            status_code=400, detail="Email or Password incorrect"
+        )  # todo 401
     elif not user.is_active:
-        raise HTTPException(status_code=400, detail="User is inactive")
+        raise HTTPException(status_code=400, detail="User is inactive")  # todo 403
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
@@ -50,32 +52,36 @@ async def login(
         refresh_token=refresh_token,
         user=user,
     )
-    valid_access_tokens = await get_valid_tokens(
-        redis_client, user.id, TokenType.ACCESS
+    await add_token_to_redis(
+        redis_client,
+        user,
+        access_token,
+        TokenType.ACCESS,
+        settings.ACCESS_TOKEN_EXPIRE_MINUTES,
     )
-    if valid_access_tokens:
-        await add_token_to_redis(
-            redis_client,
-            user,
-            access_token,
-            TokenType.ACCESS,
-            settings.ACCESS_TOKEN_EXPIRE_MINUTES,
-        )
-    valid_refresh_tokens = await get_valid_tokens(
-        redis_client, user.id, TokenType.REFRESH
+    await add_token_to_redis(
+        redis_client,
+        user,
+        refresh_token,
+        TokenType.REFRESH,
+        settings.REFRESH_TOKEN_EXPIRE_MINUTES,
     )
-    if valid_refresh_tokens:
-        await add_token_to_redis(
-            redis_client,
-            user,
-            refresh_token,
-            TokenType.REFRESH,
-            settings.REFRESH_TOKEN_EXPIRE_MINUTES,
-        )
 
     print("data", data)
     print("meta_data", meta_data)
     return create_response(meta=meta_data, data=data, message="Login correctly")
+
+
+@router.post("/logout")
+async def logout(
+    current_user: User = Depends(deps.get_current_user()),
+    meta_data: IMetaGeneral = Depends(deps.get_general_meta),
+    redis_client: Redis = Depends(get_redis_client),
+) -> IPostResponseBase[str]:
+    # auth implicit by using current_user
+    await delete_tokens(redis_client, current_user, TokenType.ACCESS)
+    await delete_tokens(redis_client, current_user, TokenType.REFRESH)
+    return create_response(data="Logout success")
 
 
 @router.post("/change_password")
@@ -178,17 +184,13 @@ async def get_new_access_token(
             access_token = security.create_access_token(
                 payload["sub"], expires_delta=access_token_expires
             )
-            valid_access_get_valid_tokens = await get_valid_tokens(
-                redis_client, user.id, TokenType.ACCESS
+            await add_token_to_redis(
+                redis_client,
+                user,
+                access_token,
+                TokenType.ACCESS,
+                settings.ACCESS_TOKEN_EXPIRE_MINUTES,
             )
-            if valid_access_get_valid_tokens:
-                await add_token_to_redis(
-                    redis_client,
-                    user,
-                    access_token,
-                    TokenType.ACCESS,
-                    settings.ACCESS_TOKEN_EXPIRE_MINUTES,
-                )
             return create_response(
                 data=TokenRead(access_token=access_token, token_type="bearer"),
                 message="Access token generated correctly",
@@ -218,15 +220,11 @@ async def login_access_token(
     access_token = security.create_access_token(
         user.id, expires_delta=access_token_expires
     )
-    valid_access_tokens = await get_valid_tokens(
-        redis_client, user.id, TokenType.ACCESS
+    await add_token_to_redis(
+        redis_client,
+        user,
+        access_token,
+        TokenType.ACCESS,
+        settings.ACCESS_TOKEN_EXPIRE_MINUTES,
     )
-    if valid_access_tokens:
-        await add_token_to_redis(
-            redis_client,
-            user,
-            access_token,
-            TokenType.ACCESS,
-            settings.ACCESS_TOKEN_EXPIRE_MINUTES,
-        )
     return TokenRead(access_token=access_token, token_type="bearer")

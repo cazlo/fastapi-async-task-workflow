@@ -18,7 +18,7 @@ from app.utils.minio_client import MinioClient
 from app.utils.token import get_valid_tokens
 
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
+    tokenUrl=f"{settings.API_V1_STR}/auth/access-token"
 )
 
 
@@ -74,7 +74,7 @@ def get_current_user(required_roles: list[str] = None) -> Callable[[], User]:
         valid_access_tokens = await get_valid_tokens(
             redis_client, user_id, TokenType.ACCESS
         )
-        if valid_access_tokens and access_token not in valid_access_tokens:
+        if access_token not in valid_access_tokens:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Could not validate credentials",
