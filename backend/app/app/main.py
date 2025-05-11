@@ -20,7 +20,7 @@ from app.api.deps import get_redis_client
 from app.api.v1.api import api_router as api_router_v1
 from app.core.config import ModeEnum, settings
 from app.core.security import decode_token
-from app.utils.fastapi_globals import GlobalsMiddleware, g
+from app.utils.fastapi_globals import GlobalsMiddleware
 
 
 async def user_id_identifier(request: Request):
@@ -70,17 +70,19 @@ async def user_id_identifier(request: Request):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    redis_client = await get_redis_client()
+    redis_client = await get_redis_client(decode_responses=False)
     FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
     await FastAPILimiter.init(redis_client, identifier=user_id_identifier)
 
     print("startup fastapi")
     yield
     # shutdown
-    await FastAPICache.clear()
     await FastAPILimiter.close()
-    g.cleanup()
-    gc.collect()
+    FastAPICache.reset()
+    await FastAPILimiter.close()
+    await redis_client.close()
+    # gc.collect()
+    print("finished shutdown of fastapi")
 
 
 # Core Application Instance
