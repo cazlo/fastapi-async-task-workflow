@@ -249,6 +249,26 @@ services:
     ports:
       - "9000:9000"
 
+  docs:
+      container_name: docs
+      image: cazlo/fastapi-async-task-workflow-docs:latest
+      build:
+        context: ./docs
+      profiles:
+        - docs
+      ports:
+        - 8008:8008
+      command:
+        - mkdocs
+        - serve
+        - -a
+        - 0.0.0.0:8008
+    #    command: ["sleep", "3600"]
+      volumes:
+        - ./docs:/opt/app/docs
+        - ./docs/adr_theme:/opt/app/docs/adr_theme
+        - ./tmp:/opt/app/tmp
+
 volumes:
   db_docker:
   caddy_data:

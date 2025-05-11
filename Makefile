@@ -69,6 +69,9 @@ DOCKER_COMPOSE_OPTIONS=
 run-dev-build:
 	docker compose -f docker-compose.yml --profile dev up --build $(DOCKER_COMPOSE_OPTIONS)
 
+run-docs-build:
+	docker compose -f docker-compose.yml --profile docs up --build $(DOCKER_COMPOSE_OPTIONS)
+
 run-dev:
 	docker compose -f docker-compose.yml --profile dev up
 

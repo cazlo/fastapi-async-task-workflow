@@ -130,3 +130,4 @@ dmypy.json
 
 .idea
 junit-test-results.xml
+tmp/
