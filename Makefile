@@ -65,7 +65,7 @@ install:
 	cd backend/app && \
 	poetry install
 
-DOCKER_COMPOSE_OPTIONS=""
+DOCKER_COMPOSE_OPTIONS=
 run-dev-build:
 	docker compose -f docker-compose.yml --profile dev up --build $(DOCKER_COMPOSE_OPTIONS)
 
