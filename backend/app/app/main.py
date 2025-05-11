@@ -1,4 +1,3 @@
-import gc
 from contextlib import asynccontextmanager
 
 from fastapi import (

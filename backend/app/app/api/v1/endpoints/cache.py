@@ -1,4 +1,3 @@
-
 from app.schemas.response_schema import IGetResponseBase, create_response
 from datetime import datetime
 from fastapi import APIRouter
