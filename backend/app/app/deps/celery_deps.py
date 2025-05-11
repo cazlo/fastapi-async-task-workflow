@@ -1,5 +1,4 @@
 from typing import Generator
-from celery_sqlalchemy_scheduler.session import SessionManager
 from app.core.config import settings
 
 

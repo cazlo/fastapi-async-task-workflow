@@ -4,7 +4,6 @@ from app.api.v1.endpoints import (
     login,
     cache,
     report,
-    periodic_tasks,
     async_job,
 )
 
@@ -13,7 +12,4 @@ api_router.include_router(login.router, prefix="/login", tags=["login"])
 api_router.include_router(user.router, prefix="/user", tags=["user"])
 api_router.include_router(cache.router, prefix="/cache", tags=["cache"])
 api_router.include_router(report.router, prefix="/report", tags=["report"])
-api_router.include_router(
-    periodic_tasks.router, prefix="/periodic_tasks", tags=["periodic_tasks"]
-)
 api_router.include_router(async_job.router, prefix="/async_job", tags=["async_job"])

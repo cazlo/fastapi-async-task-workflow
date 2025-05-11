@@ -158,13 +158,13 @@ services:
     # platform: linux/arm64/v8
     image: cazlo/fastapi-async-task-workflow:latest
     profiles:
-#      - dev excluded from dev to facilitate gathering test coverage of tasks
+#      - dev #excluded from dev to facilitate gathering test coverage of tasks
       - prod
     build:
       context: ./backend      
       args:
         INSTALL_DEV: ${INSTALL_DEV-false}
-    command: "watchfiles 'celery -A app.core.celery worker -l info' "
+    command: "watchfiles 'celery -A app.core.celery worker -l info -E --statedb=/var/run/worker.state' "
     volumes:
       - ./backend/app:/code
       # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery"
@@ -183,7 +183,7 @@ services:
       context: ./backend
       args:
         INSTALL_DEV: ${INSTALL_DEV-false}
-    command: celery -A app.core.celery beat -l info -S celery_sqlalchemy_scheduler.schedulers:DatabaseScheduler -l info
+    command: celery -A app.core.celery beat -l info -l info
     profiles:
       - dev
       - prod

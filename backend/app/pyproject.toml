@@ -61,7 +61,6 @@ redis = "^4.5.1"
 fastapi-async-sqlalchemy = "^0.6.0"
 oso = "^0.27.0" # todo drop this for python 3.13+ support
 celery = "^5.3.6"
-celery-sqlalchemy-scheduler = "^0.3.0"
 psycopg2-binary = "^2.9.5"
 #transformers = "^4.35.2"
 #torch = [
