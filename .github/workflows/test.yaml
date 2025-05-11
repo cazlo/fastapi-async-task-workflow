@@ -24,8 +24,29 @@ jobs:
       - name: Setup .env
         run: cp .env.example .env
       - name: Start Development Environment
+        id: dev-environment
         run: make run-dev-build -e DOCKER_COMPOSE_OPTIONS="-d"
-      # todo should capture container logs if this fails somehow
+        continue-on-error: true
+
+      - name: Capture Container Logs
+        if: steps.dev-environment.outcome == 'failure'
+        run: |
+          mkdir -p logs
+          docker-compose logs > logs/docker-compose.log
+          echo "::error::Development environment failed to start - check uploaded logs"
+
+      - name: Upload Container Logs
+        uses: actions/upload-artifact@v4
+        if: steps.dev-environment.outcome == 'failure'
+        with:
+          name: container-logs
+          path: logs/docker-compose.log
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: Fail if Dev Environment Failed
+        if: steps.dev-environment.outcome == 'failure'
+        run: exit 1
 
       - name: Initialize Database
         run: make init-db
