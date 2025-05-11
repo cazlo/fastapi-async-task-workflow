@@ -20,12 +20,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - name: Setup .env
         run: cp .env.example .env
       - name: Start Development Environment
         run: make run-dev-build -e DOCKER_COMPOSE_OPTIONS="-d"
-      # todo should capture container logs of this fails somehow
+      # todo should capture container logs if this fails somehow
 
       - name: Initialize Database
         run: make init-db

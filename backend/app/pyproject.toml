@@ -39,7 +39,7 @@ exclude = ["alembic", "__pycache__"]
 
 
 [tool.poetry.dependencies]
-python = ">3.9,<3.13"
+python = ">3.9,<3.14"
 alembic = "^1.13.0"
 asyncpg = "^0.30.0"
 fastapi = {extras = ["all"], version = "^0.110.0"}
@@ -59,7 +59,6 @@ pandas = "^2.1.4"
 openpyxl = "^3.1.2"
 redis = "^4.5.1"
 fastapi-async-sqlalchemy = "^0.6.0"
-oso = "^0.27.0" # todo drop this for python 3.13+ support
 celery = "^5.3.6"
 psycopg2-binary = "^2.9.5"
 #transformers = "^4.35.2"

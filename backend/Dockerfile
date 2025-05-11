@@ -1,4 +1,4 @@
-FROM docker.io/python:3.12-alpine3.21 AS runtime
+FROM docker.io/python:3.13-alpine3.21 AS runtime
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DEFAULT_TIMEOUT=100
 WORKDIR /code
