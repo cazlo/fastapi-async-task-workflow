@@ -16,7 +16,7 @@ from app.models.user_model import User
 from app.schemas.common_schema import IMetaGeneral, TokenType
 from app.schemas.response_schema import IPostResponseBase, create_response
 from app.schemas.token_schema import RefreshToken, Token, TokenRead
-from app.utils.token import add_token_to_redis, delete_tokens, get_valid_tokens
+from app.utils.token import add_token_to_redis, delete_tokens, is_valid_token
 
 router = APIRouter()
 
@@ -77,8 +77,9 @@ async def logout(
     redis_client: Redis = Depends(get_redis_client),
 ) -> IPostResponseBase[str]:
     # auth implicit by using current_user
-    await delete_tokens(redis_client, current_user, TokenType.ACCESS)
-    await delete_tokens(redis_client, current_user, TokenType.REFRESH)
+    await delete_tokens(
+        redis_client, current_user, [TokenType.ACCESS, TokenType.REFRESH]
+    )
     return create_response(data="Logout success")
 
 
@@ -109,25 +110,26 @@ async def change_password(
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
-    access_token = security.create_access_token(
+    new_access_token = security.create_access_token(
         current_user.id, expires_delta=access_token_expires
     )
     refresh_token = security.create_refresh_token(
         current_user.id, expires_delta=refresh_token_expires
     )
     data = Token(
-        access_token=access_token,
+        access_token=new_access_token,
         token_type="bearer",
         refresh_token=refresh_token,
         user=current_user,
     )
 
-    await delete_tokens(redis_client, current_user, TokenType.ACCESS)
-    await delete_tokens(redis_client, current_user, TokenType.REFRESH)
+    await delete_tokens(
+        redis_client, current_user, [TokenType.ACCESS, TokenType.REFRESH]
+    )
     await add_token_to_redis(
         redis_client,
         current_user,
-        access_token,
+        new_access_token,
         TokenType.ACCESS,
         settings.ACCESS_TOKEN_EXPIRE_MINUTES,
     )
@@ -170,10 +172,10 @@ async def get_new_access_token(
 
     if payload["type"] == "refresh":
         user_id = payload["sub"]
-        valid_refresh_tokens = await get_valid_tokens(
-            redis_client, user_id, TokenType.REFRESH
+        is_valid_refresh_token = await is_valid_token(
+            redis_client, user_id, TokenType.REFRESH, body.refresh_token
         )
-        if valid_refresh_tokens and body.refresh_token not in valid_refresh_tokens:
+        if not is_valid_refresh_token:
             raise HTTPException(status_code=403, detail="Refresh token invalid")
 
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

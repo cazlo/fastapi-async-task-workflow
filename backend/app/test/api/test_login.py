@@ -1,9 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
-from typing import AsyncGenerator
+
 from app.main import app
 from app.core.config import settings
-from app.schemas.token_schema import Token
 
 url = "http://fastapi.localhost:1080/api/v1"
 test_client = TestClient(app, base_url=url)
@@ -113,9 +112,9 @@ class TestPostLogin:
 
         response = test_client.post("/auth/login", json={"email": "manager@example.com", "password": settings.FIRST_SUPERUSER_PASSWORD})
         assert response.status_code == 200
-        access_token = response.json()['data']['access_token']
+        access_token_original = response.json()['data']['access_token']
 
-        user_list_response = test_client.get("/user/list", headers={"Authorization": f"Bearer {access_token}"})
+        user_list_response = test_client.get("/user/list", headers={"Authorization": f"Bearer {access_token_original}"})
         assert user_list_response.status_code == 200
 
         new_password = "new_pass"
@@ -123,13 +122,12 @@ class TestPostLogin:
         response = test_client.post("/auth/change_password", json={
           "current_password": settings.FIRST_SUPERUSER_PASSWORD,
           "new_password": new_password,
-        }, headers={"Authorization": f"Bearer {access_token}"})
+        }, headers={"Authorization": f"Bearer {access_token_original}"})
         assert response.status_code == 200
 
-        new_user_list_response = test_client.get("/user/list", headers={"Authorization": f"Bearer {access_token}"})
-        assert new_user_list_response.status_code == 403
+        new_user_list_response = test_client.get("/user/list", headers={"Authorization": f"Bearer {access_token_original}"})
 
-        response = test_client.post("/auth/login", json={"email": "manager@example.com", "password": "new_pass"})
+        response = test_client.post("/auth/login", json={"email": "manager@example.com", "password": new_password})
         assert response.status_code == 200
         access_token = response.json()['data']['access_token']
 
@@ -141,3 +139,5 @@ class TestPostLogin:
             "new_password": settings.FIRST_SUPERUSER_PASSWORD,
         }, headers={"Authorization": f"Bearer {access_token}"})
         assert response.status_code == 200
+
+        assert new_user_list_response.status_code == 403

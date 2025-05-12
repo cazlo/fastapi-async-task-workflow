@@ -14,7 +14,7 @@ from app.core.security import decode_token
 from app.db.session import SessionLocal, SessionLocalCelery
 from app.models.user_model import User
 from app.schemas.common_schema import IMetaGeneral, TokenType
-from app.utils.token import get_valid_tokens
+from app.utils.token import is_valid_token
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/auth/access-token"
@@ -70,10 +70,10 @@ def get_current_user(required_roles: list[str] = None) -> Callable[[], User]:
             )
 
         user_id = payload["sub"]
-        valid_access_tokens = await get_valid_tokens(
-            redis_client, user_id, TokenType.ACCESS
+        is_valid_access_token = await is_valid_token(
+            redis_client, user_id, TokenType.ACCESS, access_token
         )
-        if access_token not in valid_access_tokens:
+        if not is_valid_access_token:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Could not validate credentials",
