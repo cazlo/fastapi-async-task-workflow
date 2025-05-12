@@ -22,7 +22,8 @@ jobs:
         with:
           python-version: '3.13'
       - name: Setup .env
-        run: cp .env.example .env
+        run: |
+          touch .env && make init-env
       - name: Start Development Environment
         id: dev-environment
         run: make run-dev-build -e DOCKER_COMPOSE_OPTIONS="-d"
@@ -32,7 +33,7 @@ jobs:
         if: steps.dev-environment.outcome == 'failure'
         run: |
           mkdir -p logs
-          docker-compose logs > logs/docker-compose.log
+          docker compose --profile dev logs > logs/docker-compose.log
           echo "::error::Development environment failed to start - check uploaded logs"
 
       - name: Upload Container Logs
@@ -59,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-html-report
-          path: backend/app/htmlcov
+          path: reports/coverage
           retention-days: 14
 
       # useful for tools like SonarQube
@@ -67,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-xml-report
-          path: backend/app/coverage.xml
+          path: reports/coverage.xml
           retention-days: 14
 
       - name: Publish Test Results
@@ -76,12 +77,12 @@ jobs:
         with:
           test_file_prefix: "+backend/app"
           files: |
-            backend/app/junit-test-results.xml
+            reports/junit-test-results.xml
 
       - name: Code Coverage Report
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          filename: backend/app/coverage.xml
+          filename: reports/coverage.xml
           badge: false
           fail_below_min: true
           format: markdown

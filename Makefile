@@ -65,6 +65,12 @@ install:
 	cd backend/app && \
 	poetry install
 
+init-env:
+	cp .env.example .env && \
+    echo "HOST_UID=$(shell id -u)" >> .env && \
+    echo "HOST_GID=$(shell id -g)" >> .env && \
+    echo "Env setup for $(shell id -u):$(shell id -g)"
+
 DOCKER_COMPOSE_OPTIONS=
 run-dev-build:
 	docker compose -f docker-compose.yml --profile dev up --build $(DOCKER_COMPOSE_OPTIONS)
@@ -138,8 +144,13 @@ clean-pgadmin:
 run-test:
 	docker compose -f docker-compose-test.yml up --build
 
-PYTEST_FLAGS = -v -s --junitxml=junit-test-results.xml
-COVERAGE_FLAGS = --cov=. --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html
+REPORT_DIR = /home/appuser
+PYTEST_FLAGS = -v -s --junitxml=$(REPORT_DIR)/junit-test-results.xml
+COVERAGE_FLAGS = --cov=. --cov-report=term-missing --cov-report=xml:$(REPORT_DIR)/coverage.xml --cov-report=html:$(REPORT_DIR)/coverage
 pytest:
 	docker compose -f docker-compose.yml exec fastapi_server pytest $(PYTEST_FLAGS) $(COVERAGE_FLAGS)
 
+clean:
+	rm -rf tmp && \
+	cd reports && \
+	rm -rf coverage coverage.xml junit-test-results.xml
