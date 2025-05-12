@@ -25,12 +25,11 @@ RUN echo "#!/bin/bash" > /usr/local/bin/plantuml && \
 
 # Install mermaid2 plugin
 RUN pip install mkdocs-mermaid2-plugin==1.2.1
-# todo install
 
 # Install MkDocs as dependency for proper pallete-specific diagram color rendering + nicer ubjectively CSS overall
 RUN pip install mkdocs-material==9.6.11
 
-# todo this also looks useful for easier PDF generation
+# this is also useful for easier PDF generation if desired
 #RUN pip install mkdocs-print-site-plugin
 
 RUN pip install mkdocs-kroki-plugin==0.9.0

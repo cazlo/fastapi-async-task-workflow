@@ -9,6 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 import sqlalchemy_utils
 import sqlmodel # added
+import sqlalchemy.types
 
 
 # revision identifiers, used by Alembic.
@@ -23,7 +24,7 @@ def upgrade():
     op.create_table('Role',
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('id', sqlalchemy.types.Uuid(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
@@ -40,11 +41,11 @@ def upgrade():
     sa.Column('state', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('country', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('address', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('id', sqlalchemy.types.Uuid(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('hashed_password', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('role_id', sqlmodel.sql.sqltypes.GUID(), nullable=True),
+    sa.Column('role_id', sqlalchemy.types.Uuid(), nullable=True),
     sa.ForeignKeyConstraint(['role_id'], ['Role.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -54,10 +55,10 @@ def upgrade():
     op.create_table('Group',
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('id', sqlalchemy.types.Uuid(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('created_by_id', sqlmodel.sql.sqltypes.GUID(), nullable=True),
+    sa.Column('created_by_id', sqlalchemy.types.Uuid(), nullable=True),
     sa.ForeignKeyConstraint(['created_by_id'], ['User.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -65,10 +66,10 @@ def upgrade():
     op.create_table('Team',
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('headquarters', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('id', sqlalchemy.types.Uuid(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('created_by_id', sqlmodel.sql.sqltypes.GUID(), nullable=True),
+    sa.Column('created_by_id', sqlalchemy.types.Uuid(), nullable=True),
     sa.ForeignKeyConstraint(['created_by_id'], ['User.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -78,11 +79,11 @@ def upgrade():
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('secret_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('age', sa.Integer(), nullable=True),
-    sa.Column('team_id', sqlmodel.sql.sqltypes.GUID(), nullable=True),
-    sa.Column('id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('team_id', sqlalchemy.types.Uuid(), nullable=True),
+    sa.Column('id', sqlalchemy.types.Uuid(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('created_by_id', sqlmodel.sql.sqltypes.GUID(), nullable=True),
+    sa.Column('created_by_id', sqlalchemy.types.Uuid(), nullable=True),
     sa.ForeignKeyConstraint(['created_by_id'], ['User.id'], ),
     sa.ForeignKeyConstraint(['team_id'], ['Team.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -91,9 +92,9 @@ def upgrade():
     op.create_index(op.f('ix_Hero_id'), 'Hero', ['id'], unique=False)
     op.create_index(op.f('ix_Hero_name'), 'Hero', ['name'], unique=False)
     op.create_table('LinkGroupUser',
-    sa.Column('id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
-    sa.Column('group_id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
-    sa.Column('user_id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('id', sqlalchemy.types.Uuid(), nullable=False),
+    sa.Column('group_id', sqlalchemy.types.Uuid(), nullable=False),
+    sa.Column('user_id', sqlalchemy.types.Uuid(), nullable=False),
     sa.ForeignKeyConstraint(['group_id'], ['Group.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['User.id'], ),
     sa.PrimaryKeyConstraint('id', 'group_id', 'user_id')

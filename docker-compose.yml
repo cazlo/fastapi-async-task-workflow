@@ -18,9 +18,9 @@ services:
       - app
 
   fastapi_server_prd:
-    container_name: fastapi_server
     extends:
       service: fastapi_server_tmpl
+    container_name: fastapi_server
     profiles:
       - prod
     build:
@@ -36,13 +36,14 @@ services:
     extends:
       service: fastapi_server_tmpl
     container_name: fastapi_server_dev
+    profiles:
+      - dev
+    image: cazlo/fastapi-async-task-workflow-test:latest
     build:
       context: ./backend
       target: test
     environment:
       MODE: testing
-    profiles:
-      - dev
     command: "sh -c 'uvicorn app.main:app --reload --workers 3 --host 0.0.0.0 --port 8000'"
     networks:
       app:
@@ -52,7 +53,9 @@ services:
   db_migrator:
     container_name: db_migrator
     image: cazlo/fastapi-async-task-workflow:latest
-    build: ./backend
+    build:
+      context: ./backend
+      target: runtime
     profiles:
       - dev
       - prod
@@ -94,24 +97,6 @@ services:
        start_period: 10s
      networks:
        - app
-#  database:
-#    image: bitnami/postgresql # todo version lock, use healthcheck
-#    restart: always
-#    container_name: database
-#    env_file: ".env"
-#    user: root
-#    volumes:
-#      - db_docker:/bitnami/postgresql
-#      - ./create-dbs.sql:/docker-entrypoint-initdb.d/create-dbs.sql
-#    ports:
-#      - 5454:5432 # Remove this on production
-#    expose:
-#      - 5432
-#    environment:
-#      - POSTGRESQL_USERNAME=${DATABASE_USER}
-#      - POSTGRESQL_PASSWORD=${DATABASE_PASSWORD}
-#      - POSTGRESQL_DATABASE=${DATABASE_NAME}
-
 
   redis_server:
     image: docker.io/valkey/valkey:8.1-alpine3.21
@@ -162,14 +147,13 @@ services:
     container_name: celery_worker
     restart: always
     # platform: linux/arm64/v8
-    image: cazlo/fastapi-async-task-workflow:latest
     profiles:
 #      - dev #excluded from dev to facilitate gathering test coverage of tasks
       - prod
+    image: cazlo/fastapi-async-task-workflow:latest
     build:
-      context: ./backend      
-      args:
-        INSTALL_DEV: ${INSTALL_DEV-false}
+      context: ./backend
+      target: runtime
     command: "watchfiles 'celery -A app.core.celery worker -l info -E --statedb=/var/run/worker.state' "
     volumes:
       - ./backend/app:/code
@@ -187,10 +171,10 @@ services:
     container_name: celery_beat
     restart: always
     # platform: linux/arm64/v8
+    image: cazlo/fastapi-async-task-workflow:latest
     build:
       context: ./backend
-      args:
-        INSTALL_DEV: ${INSTALL_DEV-false}
+      target: runtime
     command: celery -A app.core.celery beat -l info -l info
     profiles:
       - dev
@@ -208,7 +192,7 @@ services:
       - app
 
   minio_server:
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    image: docker.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
     restart: always
     container_name: minio_server
     profiles:
@@ -229,7 +213,7 @@ services:
 
   caddy_reverse_proxy:
     container_name: caddy_reverse_proxy
-    image: caddy:alpine
+    image: docker.io/caddy:2.10-alpine
     restart: always
     ports:
       - 80:80
@@ -255,7 +239,7 @@ services:
 
   sonarqube:
     container_name: "sonarqube"
-    image: "sonarqube:9.9.2-community"
+    image: docker.io/sonarqube:9.9.2-community
     volumes:
       - ./sonarqube/extensions:/opt/sonarqube/extensions
       - ./sonarqube/logs:/opt/sonarqube/logs
@@ -283,7 +267,6 @@ services:
         - serve
         - -a
         - 0.0.0.0:8008
-    #    command: ["sleep", "3600"]
       volumes:
         - ./docs:/opt/app/docs
         - ./docs/adr_theme:/opt/app/docs/adr_theme

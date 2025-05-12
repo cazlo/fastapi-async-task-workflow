@@ -41,9 +41,9 @@ async def get_increment_task_result(task_id: str):
         task_id=task_result.id,
         status=task_result.status,
         ready=ready,
-        result=task_result.result
-        if ready and not task_result.status == REVOKED
-        else None,
+        result=(
+            task_result.result if ready and not task_result.status == REVOKED else None
+        ),
     )
 
 
@@ -57,9 +57,9 @@ async def delete_increment_task(task_id: str):
         task_id=task_result.id,
         status=task_result.status,
         ready=task_result.ready(),
-        result=task_result.result
-        if ready and not task_result.status == REVOKED
-        else None,
+        result=(
+            task_result.result if ready and not task_result.status == REVOKED else None
+        ),
     )
 
 

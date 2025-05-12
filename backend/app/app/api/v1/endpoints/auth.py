@@ -65,8 +65,8 @@ async def login(
         settings.REFRESH_TOKEN_EXPIRE_MINUTES,
     )
 
-    print("data", data)
-    print("meta_data", meta_data)
+    # print("data", data)
+    # print("meta_data", meta_data)
     return create_response(meta=meta_data, data=data, message="Login correctly")
 
 

@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 import sqlalchemy_utils
 import sqlmodel # added
-
+import sqlalchemy.types
 
 # revision identifiers, used by Alembic.
 revision = '3223652d21bd'
@@ -24,7 +24,7 @@ def upgrade():
     sa.Column('title', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('path', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('id', sqlalchemy.types.Uuid(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
@@ -34,15 +34,15 @@ def upgrade():
     sa.Column('file_format', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('width', sa.Integer(), nullable=True),
     sa.Column('height', sa.Integer(), nullable=True),
-    sa.Column('id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('id', sqlalchemy.types.Uuid(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('media_id', sqlmodel.sql.sqltypes.GUID(), nullable=True),
+    sa.Column('media_id', sqlalchemy.types.Uuid(), nullable=True),
     sa.ForeignKeyConstraint(['media_id'], ['Media.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_ImageMedia_id'), 'ImageMedia', ['id'], unique=False)
-    op.add_column('User', sa.Column('image_id', sqlmodel.sql.sqltypes.GUID(), nullable=True))
+    op.add_column('User', sa.Column('image_id', sqlalchemy.types.Uuid(), nullable=True))
     op.create_foreign_key(None, 'User', 'ImageMedia', ['image_id'], ['id'])
     # ### end Alembic commands ###
 
