@@ -27,7 +27,6 @@ def test_queue_and_finish_increment_task(celery_worker):
             time.sleep(0.5)
 
 
-@pytest.mark.skip(reason="Only working for situation where we don't use the embedded celery_worker")
 def test_delete_task(celery_worker):
     test_input = 1
     response = test_client.post("async_job/increment_task", json={
@@ -44,7 +43,8 @@ def test_delete_task(celery_worker):
     assert delete_response_body.ready == False
     assert delete_response_body.status == "PENDING"
 
-    response = test_client.get(f"async_job/increment_task/{task_id}")
-    assert response.status_code == 200
-    response_body = TaskResponse(**response.json())
-    assert response_body.status == "REVOKED"
+    # todo the following is only working for integration tests using non-embedded celery_worker
+    # response = test_client.get(f"async_job/increment_task/{task_id}")
+    # assert response.status_code == 200
+    # response_body = TaskResponse(**response.json())
+    # assert response_body.status == "REVOKED"
