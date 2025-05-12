@@ -14,10 +14,8 @@ services:
         condition: service_healthy
       db_migrator:
         condition: service_completed_successfully
-    links:
-      - caddy_reverse_proxy:storage.localhost
     networks:
-      - default
+      - app
 
   fastapi_server_prd:
     container_name: fastapi_server
@@ -30,7 +28,7 @@ services:
       target: runtime
     command: "sh -c 'python app/initial_data.py && gunicorn -w 3 -k uvicorn.workers.UvicornWorker app.main:app  --bind 0.0.0.0:8000 --preload --log-level=debug --timeout 120'"
     networks:
-      default:
+      app:
         aliases:
           - fastapi_server
 
@@ -47,7 +45,7 @@ services:
       - dev
     command: "sh -c 'uvicorn app.main:app --reload --workers 3 --host 0.0.0.0 --port 8000'"
     networks:
-      default:
+      app:
         aliases:
           - fastapi_server
 
@@ -65,6 +63,8 @@ services:
       database:
         condition: service_healthy
     command: "sh -c 'alembic upgrade head'"
+    networks:
+      - app
 
   database:
      image: docker.io/postgres:17
@@ -92,6 +92,8 @@ services:
        timeout: 5s
        retries: 10
        start_period: 10s
+     networks:
+       - app
 #  database:
 #    image: bitnami/postgresql # todo version lock, use healthcheck
 #    restart: always
@@ -127,6 +129,8 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+    networks:
+      - app
   
   rabbitmq:
     image: docker.io/rabbitmq:3.13-management
@@ -151,6 +155,8 @@ services:
       start_period: 10s
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app
 
   celery_worker:
     container_name: celery_worker
@@ -174,6 +180,8 @@ services:
       rabbitmq:
         condition: service_healthy
     env_file: .env
+    networks:
+      - app
   
   celery_beat:  #Good for crontab and schedule tasks
     container_name: celery_beat
@@ -196,9 +204,11 @@ services:
       rabbitmq:
         condition: service_healthy
     env_file: .env
+    networks:
+      - app
 
   minio_server:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     restart: always
     container_name: minio_server
     profiles:
@@ -214,14 +224,22 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BROWSER_REDIRECT_URL: http://stash.localhost
     command: "server /data --console-address ':9090'"
+    networks:
+      - app
 
   caddy_reverse_proxy:
     container_name: caddy_reverse_proxy
     image: caddy:alpine
     restart: always
     ports:
-      - 1080:80
-      - 10443:443
+      - 80:80
+      - 443:443
+    cap_add:
+      - NET_BIND_SERVICE
+    networks:
+      app:
+        aliases:
+          - storage.localhost
     environment:
       - EXT_ENDPOINT1=${EXT_ENDPOINT1}
       - LOCAL_1=${LOCAL_1}
@@ -248,6 +266,8 @@ services:
       - "9000"
     ports:
       - "9000:9000"
+    networks:
+      - app
 
   docs:
       container_name: docs
@@ -276,4 +296,4 @@ volumes:
   rabbitmq_data:
 
 networks:
-  default:
+  app:

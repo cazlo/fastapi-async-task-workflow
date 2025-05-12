@@ -14,7 +14,6 @@ from app.core.security import decode_token
 from app.db.session import SessionLocal, SessionLocalCelery
 from app.models.user_model import User
 from app.schemas.common_schema import IMetaGeneral, TokenType
-from app.utils.minio_client import MinioClient
 from app.utils.token import get_valid_tokens
 
 reusable_oauth2 = OAuth2PasswordBearer(
@@ -101,13 +100,3 @@ def get_current_user(required_roles: list[str] = None) -> Callable[[], User]:
         return user
 
     return current_user
-
-
-def minio_auth() -> MinioClient:
-    minio_client = MinioClient(
-        access_key=settings.MINIO_ROOT_USER,
-        secret_key=settings.MINIO_ROOT_PASSWORD,
-        bucket_name=settings.MINIO_BUCKET,
-        minio_url=settings.MINIO_URL,
-    )
-    return minio_client

@@ -13,6 +13,11 @@ class ModeEnum(str, Enum):
     testing = "testing"
 
 
+class ObjectStoreProviders(str, Enum):
+    minio = "minio"
+    s3 = "s3"
+
+
 class Settings(BaseSettings):
     MODE: ModeEnum = ModeEnum.development
     API_VERSION: str = "v1"
@@ -107,12 +112,12 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_EMAIL: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
 
+    OBJECT_STORE_PROVIDER: ObjectStoreProviders = ObjectStoreProviders.minio
+
     MINIO_ROOT_USER: str
     MINIO_ROOT_PASSWORD: str
     MINIO_URL: str
     MINIO_BUCKET: str
-
-    WHEATER_URL: AnyHttpUrl
 
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ENCRYPT_KEY: str = secrets.token_urlsafe(32)

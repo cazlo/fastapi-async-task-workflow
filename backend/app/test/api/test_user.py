@@ -33,3 +33,27 @@ class TestPostLogin:
             assert response.status_code == expected_status
             if expected_response is not None:                
                 assert response.json() == expected_response
+
+    def test_user_image_upload(self):
+        credentials = {"email": "manager@example.com", "password": settings.FIRST_SUPERUSER_PASSWORD}
+        response = test_client.post("/auth/login", json=credentials)
+        access_token = response.json()["data"]["access_token"]
+        with open("test/api/test_icon.png", "rb") as file:
+            file_content = file.read()
+        post_image = test_client.post("/user/image",
+                                    data={
+                                        "title": "test_image",
+                                        "description": "test_image description"
+                                    },
+                                    files={
+                                        "image_file": ("test_icon.png", file_content),
+                                    },
+                                    headers={"Authorization": f"Bearer {access_token}"})
+        assert post_image.status_code == 200
+        image_link = post_image.json()["data"]["image"]["media"]["link"]
+        assert image_link is not None
+
+        # todo networking for this not working yet in compose net, link works for host net
+        # get_image = test_client.get(image_link)
+        # assert get_image.status_code == 200
+        # assert get_image.headers["content-type"] == "image/png"

@@ -1,6 +1,8 @@
 from io import BytesIO
 from typing import Annotated
 from uuid import UUID
+
+from app.deps.file_repository_deps import get_file_repository
 from app.utils.exceptions import (
     UserSelfDeleteException,
 )
@@ -9,7 +11,7 @@ from app.api import deps
 from app.deps import user_deps
 from app.models import User
 from app.models.role_model import Role
-from app.utils.minio_client import MinioClient
+from app.utils.file_repository.interface import FileRepository
 from app.utils.resize_image import modify_image
 from fastapi import (
     APIRouter,
@@ -199,14 +201,14 @@ async def upload_my_image(
     description: str | None = Body(None),
     image_file: UploadFile = File(...),
     current_user: User = Depends(deps.get_current_user()),
-    minio_client: MinioClient = Depends(deps.minio_auth),
+    file_repository: FileRepository = Depends(get_file_repository),
 ) -> IPostResponseBase[IUserRead]:
     """
     Uploads a user image
     """
     try:
         image_modified = modify_image(BytesIO(image_file.file.read()))
-        data_file = minio_client.put_object(
+        data_file = file_repository.upload_file(
             file_name=image_file.filename,
             file_data=BytesIO(image_modified.file_data),
             content_type=image_file.content_type,
@@ -224,7 +226,7 @@ async def upload_my_image(
         )
         return create_response(data=user)
     except Exception as e:
-        print(e)
+        print(e)  # todo this should get cleaned up
         return Response("Internal server error", status_code=500)
 
 
@@ -237,7 +239,7 @@ async def upload_user_image(
     current_user: User = Depends(
         deps.get_current_user(required_roles=[IRoleEnum.admin])
     ),
-    minio_client: MinioClient = Depends(deps.minio_auth),
+    file_repository: FileRepository = Depends(get_file_repository),
 ) -> IPostResponseBase[IUserRead]:
     """
     Uploads a user image by his/her id
@@ -247,7 +249,7 @@ async def upload_user_image(
     """
     try:
         image_modified = modify_image(BytesIO(image_file.file.read()))
-        data_file = minio_client.put_object(
+        data_file = file_repository.upload_file(
             file_name=image_file.filename,
             file_data=BytesIO(image_modified.file_data),
             content_type=image_file.content_type,

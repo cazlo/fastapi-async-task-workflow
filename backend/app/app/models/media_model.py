@@ -1,9 +1,10 @@
-from app.models.base_uuid_model import BaseUUIDModel
 from pydantic import computed_field
 from sqlmodel import SQLModel
-from app.utils.minio_client import MinioClient
+
 from app.core.config import settings
-from app import api
+from app.utils.file_repository.interface import FileRepository
+from app.deps.file_repository_deps import get_file_repository
+from app.models.base_uuid_model import BaseUUIDModel
 
 
 class MediaBase(SQLModel):
@@ -18,8 +19,8 @@ class Media(BaseUUIDModel, MediaBase, table=True):
     def link(self) -> str | None:
         if self.path is None:
             return ""
-        minio: MinioClient = api.deps.minio_auth()
-        url = minio.presigned_get_object(
+        repository: FileRepository = get_file_repository()
+        url = repository.get_presigned_url(
             bucket_name=settings.MINIO_BUCKET, object_name=self.path
         )
         return url

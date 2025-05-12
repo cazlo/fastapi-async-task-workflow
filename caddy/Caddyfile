@@ -2,12 +2,12 @@
   email custom@domain.com
 }
 
-fastapi.{$EXT_ENDPOINT1}:80, fastapi.{$LOCAL_1}:80, fastapi.{$LOCAL_2}:80, :80 {
-  reverse_proxy fastapi_server:8000
+storage.{$EXT_ENDPOINT1}:80, storage.{$LOCAL_1}:80, storage.{$LOCAL_2}:80 storage.{$LOCAL_1} {
+  reverse_proxy minio_server:9000
 }
 
-storage.{$EXT_ENDPOINT1}:80, storage.{$LOCAL_1}:80, storage.{$LOCAL_2}:80 {
-  reverse_proxy minio_server:9000 
+fastapi.{$EXT_ENDPOINT1}:80, fastapi.{$LOCAL_1}:80, fastapi.{$LOCAL_2}:80, :80 {
+  reverse_proxy fastapi_server:8000
 }
 
 stash.{$EXT_ENDPOINT1}:80, stash.{$LOCAL_1}:80, stash.{$LOCAL_2}:80 {
