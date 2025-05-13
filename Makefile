@@ -60,6 +60,8 @@ help:
 	@echo "        Starts Sonarqube container."	
 	@echo "    stop-sonarqube"
 	@echo "        Stops Sonarqube container."
+	@echo "    build-docs"
+	@echo "        Build documentation site using mkdocs."
 
 install:
 	cd backend/app && \
@@ -77,6 +79,11 @@ run-dev-build:
 
 run-docs-build:
 	docker compose -f docker-compose.yml --profile docs up --build $(DOCKER_COMPOSE_OPTIONS)
+
+build-docs:
+	mkdir -p ./reports/docs-site ./tmp
+	docker compose -f docker-compose.yml --profile docs run --rm --build docs mkdocs build
+	echo "Documentation built successfully in ./reports/docs-site"
 
 run-dev:
 	docker compose -f docker-compose.yml --profile dev up

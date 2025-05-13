@@ -21,7 +21,7 @@ ENV PLANTUML_JAVAOPTS="-Djava.awt.headless=true"
 ADD https://github.com/plantuml/plantuml/releases/download/v1.2025.2/plantuml-1.2025.2.jar /opt/plantuml/plantuml.jar
 RUN echo "#!/bin/bash" > /usr/local/bin/plantuml && \
     echo 'java $PLANTUML_JAVAOPTS -jar /opt/plantuml/plantuml.jar ${@}' >> /usr/local/bin/plantuml && \
-    chmod +x /usr/local/bin/plantuml
+    chmod 755 /usr/local/bin/plantuml /opt/plantuml/plantuml.jar
 
 # Install mermaid2 plugin
 RUN pip install mkdocs-mermaid2-plugin==1.2.1

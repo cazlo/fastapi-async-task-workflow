@@ -268,16 +268,13 @@ services:
         - docs
       ports:
         - 8008:8008
-      command:
-        - mkdocs
-        - serve
-        - -a
-        - 0.0.0.0:8008
+      command: ["mkdocs", "serve", "-a", "0.0.0.0:8008"]
       user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
       volumes:
         - ./docs:/opt/app/docs
         - ./docs/adr_theme:/opt/app/docs/adr_theme
         - ./tmp:/opt/app/tmp:rwz
+        - ./reports/docs-site:/opt/app/site:rwz
 
 volumes:
   db_docker:
