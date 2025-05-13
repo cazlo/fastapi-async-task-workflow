@@ -11,7 +11,7 @@ define SERVERS_JSON
 			"Host": "$(DATABASE_HOST)",
 			"Port": 5432,
 			"MaintenanceDB": "postgres",
-			"Username": "$(DATABASE_PASSWORD)",
+			"Username": "$(DATABASE_USER)",
 			"SSLMode": "prefer",
 			"PassFile": "/tmp/pgpassfile"
 		}
@@ -25,19 +25,21 @@ help:
 	@echo "    install"
 	@echo "        Install all packages of poetry project locally."
 	@echo "    run-dev-build"
-	@echo "        Run development docker-compose and force build containers."
+	@echo "        Run development docker compose and force build containers."
 	@echo "    run-dev"
-	@echo "        Run development docker-compose."
+	@echo "        Run development docker compose."
 	@echo "    stop-dev"
-	@echo "        Stop development docker-compose."
+	@echo "        Stop development docker compose."
 	@echo "    run-prod"
-	@echo "        Run production docker-compose."
+	@echo "        Run production docker compose."
 	@echo "    stop-prod"
-	@echo "        Run production docker-compose."
+	@echo "        Run production docker compose."
 	@echo "    init-db"
 	@echo "        Init database with sample data."	
 	@echo "    add-dev-migration"
 	@echo "        Add new database migration using alembic."
+	@echo "    upgrade-migration"
+	@echo "        This helps to upgrade pending migrations."	
 	@echo "    run-pgadmin"
 	@echo "        Run pgadmin4."	
 	@echo "    load-server-pgadmin"
@@ -58,66 +60,104 @@ help:
 	@echo "        Starts Sonarqube container."	
 	@echo "    stop-sonarqube"
 	@echo "        Stops Sonarqube container."
+	@echo "    build-docs"
+	@echo "        Build documentation site using mkdocs."
 
 install:
-	cd fastapi-alembic-sqlmodel-async && \
-	poetry shell && \
+	cd backend/app && \
 	poetry install
 
+init-env:
+	cp .env.example .env && \
+    echo "HOST_UID=$(shell id -u)" >> .env && \
+    echo "HOST_GID=$(shell id -g)" >> .env && \
+    echo "Env setup for $(shell id -u):$(shell id -g)"
+
+DOCKER_COMPOSE_OPTIONS=
 run-dev-build:
-	docker-compose -f docker-compose-dev.yml up --build
+	docker compose -f docker-compose.yml --profile dev up --build $(DOCKER_COMPOSE_OPTIONS)
+
+run-docs-build:
+	docker compose -f docker-compose.yml --profile docs up --build $(DOCKER_COMPOSE_OPTIONS)
+
+build-docs:
+	mkdir -p ./reports/docs-site ./tmp
+	docker compose -f docker-compose.yml --profile docs run --rm --build docs mkdocs build
+	echo "Documentation built successfully in ./reports/docs-site"
 
 run-dev:
-	docker-compose -f docker-compose-dev.yml up
+	docker compose -f docker-compose.yml --profile dev up
 
 stop-dev:
-	docker-compose -f docker-compose-dev.yml down
+	docker compose -f docker-compose.yml --profile dev down
 
 run-prod:
-	docker-compose up
+	docker compose --profile prod up --build
 
 stop-prod:
-	docker-compose down
+	docker compose --profile prod down
+	
 
 init-db:
-	docker-compose -f docker-compose-dev.yml exec fastapi_server python app/initial_data.py
+	docker compose -f docker-compose.yml exec fastapi_server python app/initial_data.py && \
+	echo "Initial data created." 
 
 formatter:
-	cd fastapi-alembic-sqlmodel-async && \
+	cd backend/app && \
 	poetry run black app
 
 lint:
-	cd fastapi-alembic-sqlmodel-async && \
+	cd backend/app && \
 	poetry run ruff app && poetry run black --check app
 
+mypy:
+	cd backend/app && \
+	poetry run mypy .
+
 lint-watch:
-	cd fastapi-alembic-sqlmodel-async && \
+	cd backend/app && \
 	poetry run ruff app --watch
 
 lint-fix:
-	cd fastapi-alembic-sqlmodel-async && \
+	cd backend/app && \
 	poetry run ruff app --fix
 
 run-sonarqube:
-	docker-compose -f docker-compose-sonarqube.yml up
-
-run-sonar-scanner:
-	docker run --rm -v "${PWD}/fastapi-alembic-sqlmodel-async:/usr/src" sonarsource/sonar-scanner-cli
+	docker compose -f docker-compose.yml --profile sast up
 
 stop-sonarqube:
-	docker-compose -f docker-compose-sonarqube.yml down
+	docker compose -f docker-compose-sonarqube.yml --profile sast down
+
+run-sonar-scanner:
+	docker run --rm -v "${PWD}/backend:/usr/src" sonarsource/sonar-scanner-cli -X
 
 add-dev-migration:
-	docker-compose -f docker-compose-dev.yml exec fastapi_server alembic revision --autogenerate && \
-	docker-compose -f docker-compose-dev.yml exec fastapi_server alembic upgrade head
+	docker compose -f docker-compose.yml exec fastapi_server alembic revision --autogenerate && \
+	docker compose -f docker-compose.yml exec fastapi_server alembic upgrade head && \
+	echo "Migration added and applied."
+
+upgrade-migration:	
+	docker compose -f docker-compose-dev.yml exec fastapi_server alembic upgrade head && \
+	echo "Migration upgraded."
 
 run-pgadmin:
 	echo "$$SERVERS_JSON" > ./pgadmin/servers.json && \
 	docker volume create pgadmin_data && \
-	docker-compose -f pgadmin.yml up
-	
-load-server-pgadmin:
-	docker exec -it pgadmin python /pgadmin4/setup.py --load-servers servers.json
+	docker compose -f pgadmin.yml up --force-recreate
 
 clean-pgadmin:
 	docker volume rm pgadmin_data
+
+run-test:
+	docker compose -f docker-compose-test.yml up --build
+
+REPORT_DIR = /home/appuser
+PYTEST_FLAGS = -v -s --junitxml=$(REPORT_DIR)/junit-test-results.xml
+COVERAGE_FLAGS = --cov=. --cov-report=term-missing --cov-report=xml:$(REPORT_DIR)/coverage.xml --cov-report=html:$(REPORT_DIR)/coverage
+pytest:
+	docker compose -f docker-compose.yml exec fastapi_server pytest $(PYTEST_FLAGS) $(COVERAGE_FLAGS)
+
+clean:
+	rm -rf tmp && \
+	cd reports && \
+	rm -rf coverage coverage.xml junit-test-results.xml

@@ -1,0 +1,67 @@
+site_name: Architecture Documentation Examples
+repo_url: https://github.com/cazlo/docs-as-code
+extra_css:
+  - adr_theme/css/adr.css
+exclude_docs: |
+  x_example_*
+  adr_theme/README.md
+#  diagrams/kroki-demos/*
+theme:
+  name: material
+  features:
+    - content.tabs.link
+  custom_dir: adr_theme
+  palette:
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - plantuml_markdown:
+      cachedir: /opt/app/tmp
+#      theme: C4_superhero from <C4/themes>
+  - pymdownx.superfences:
+        # make exceptions to highlighting of code:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+plugins:
+  - search
+  - mermaid2
+  - blog:
+      enabled: false
+  - group:
+      enabled: false
+      plugins: []
+  - offline
+#  - search
+  - social:
+      enabled: false
+  - tags
+  - privacy:
+      # to pull external scripts and assets like fonts automagically and self-host it instead
+      enabled: true
+      cache_dir: /opt/app/tmp
+#  - kroki:
+#      ServerURL: 'http://kroki:8000'
+#      EnableDiagramsnet: true
+#      HttpMethod: POST
+#      FileTypeOverrides:
+#        structurizr: svg

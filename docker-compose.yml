@@ -1,76 +1,208 @@
-version: '3.8'
-
 services:
-  fastapi_server:
-    container_name: fastapi_server
-    image: jrtec/fastapi-alembic-sqlmodel-async:main
+  fastapi_server_tmpl:
+    image: cazlo/fastapi-async-task-workflow:latest
     restart: always
-    command: "sh -c 'alembic upgrade head && python app/initial_data.py && gunicorn -w 3 -k uvicorn.workers.UvicornWorker app.main:app  --bind 0.0.0.0:8000 --preload --log-level=debug --timeout 120'"
-    volumes:
-      - ./fastapi-alembic-sqlmodel-async:/code
     expose:
       - 8000
     env_file: ".env"
+    profiles:
+      - template
     depends_on:
-      - database
-    links:
-      - traefik-proxy:storage.localhost
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.fastapi_local.entrypoints=web"
-      - "traefik.http.routers.fastapi_local.rule=Host(`fastapi.${LOCAL_1}`, `fastapi.${LOCAL_2}`, `fastapi.${EXT_ENDPOINT1}`)"
-      - "traefik.http.routers.fastapi_local_base.entrypoints=web"
-      - "traefik.http.routers.fastapi_local_base.rule=Host(`${LOCAL_1}`, `${LOCAL_2}`, `${EXT_ENDPOINT1}`)"
-      - traefik.http.services.fastapi_localservice.loadbalancer.server.port=8000
-  
-  database:
-    image: bitnami/postgresql:13.3.0
-    restart: always
-    container_name: database
-    env_file: ".env"
-    user: root
+      database:
+        condition: service_healthy
+      db_migrator:
+        condition: service_completed_successfully
+    networks:
+      - app
+
+  fastapi_server_prd:
+    extends:
+      service: fastapi_server_tmpl
+    container_name: fastapi_server
+    profiles:
+      - prod
+    build:
+      context: ./backend
+      target: runtime
+    command: "sh -c 'python app/initial_data.py && gunicorn -w 3 -k uvicorn.workers.UvicornWorker app.main:app  --bind 0.0.0.0:8000 --preload --log-level=debug --timeout 120'"
+    networks:
+      app:
+        aliases:
+          - fastapi_server
+
+  fastapi_server:
+    extends:
+      service: fastapi_server_tmpl
+    container_name: fastapi_server_dev
+    profiles:
+      - dev
+    image: cazlo/fastapi-async-task-workflow-test:latest
+    build:
+      context: ./backend
+      target: test
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     volumes:
-      - ./db_docker:/bitnami/postgresql
-    expose:
-      - 5432
+      - ./backend/app:/opt/app:rwz
+      - ./reports:/home/appuser:rwz
     environment:
-      - POSTGRES_USERNAME=${DATABASE_USER}
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-      - POSTGRES_DATABASE=${DATABASE_NAME}
-      - POSTGRES_HOST_AUTH_METHOD= "trust"
-      - POSTGRESQL_POSTGRES_PASSWORD= ${DATABASE_PASSWORD}
-      
+      MODE: testing
+    command: "sh -c 'uvicorn app.main:app --reload --workers 3 --host 0.0.0.0 --port 8000'"
+    networks:
+      app:
+        aliases:
+          - fastapi_server
+
+  db_migrator:
+    container_name: db_migrator
+    image: cazlo/fastapi-async-task-workflow:latest
+    build:
+      context: ./backend
+      target: runtime
+    profiles:
+      - dev
+      - prod
+    env_file: ".env"
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    volumes:
+      - ./backend/app:/opt/app:rwz
+    depends_on:
+      database:
+        condition: service_healthy
+    command: "sh -c 'alembic upgrade head'"
+    networks:
+      - app
+
+  database:
+     image: docker.io/postgres:17
+     restart: always
+     container_name: database
+     env_file: ".env"
+     user: root
+     profiles:
+       - dev
+       - prod
+     volumes:
+       - db_docker:/var/lib/postgresql/data
+       - ./create-dbs.sql:/docker-entrypoint-initdb.d/create-dbs.sql
+     ports:
+       - 5454:5432
+     expose:
+       - 5432
+     environment:
+       - POSTGRES_USERNAME=${DATABASE_USER}
+       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+       - POSTGRES_DATABASE=${DATABASE_NAME}
+     healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+       interval: 2s
+       timeout: 5s
+       retries: 10
+       start_period: 10s
+     networks:
+       - app
+
   redis_server:
+    image: docker.io/valkey/valkey:8.1-alpine3.21
     container_name: redis_server
-    image: "redis:alpine"
     restart: always
+    profiles:
+      - dev
+      - prod
     expose:
       - 6379
     env_file: .env
-
-  nginx_server:
-    container_name: nginx_server
-    restart: unless-stopped
-    logging:
-      driver: none
-    image: "nginx:latest"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app
+  
+  rabbitmq:
+    image: docker.io/rabbitmq:3.13-management
+    container_name: rabbitmq
+    restart: always
+    profiles:
+      - dev
+      - prod
     expose:
-      - 8080
+      - 5672
+      - 15672
+    ports:
+      - "15672:15672"  # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     volumes:
-      - ./static:/code/static
-      - ./nginx-config-files/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx-config-files/app.nginx.template:/etc/nginx/templates/app.nginx.template
-      - "${EB_LOG_BASE_DIR:-./nginx-config-files}/nginx-proxy:/var/log/nginx"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nginx_local.entrypoints=web"
-      - "traefik.http.routers.nginx_local.rule=Host(`nginx.${LOCAL_1}`, `nginx.${LOCAL_2}`, `nginx.${EXT_ENDPOINT1}`)"
-      - traefik.http.services.nginx_local_service.loadbalancer.server.port=8080
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app
+
+  celery_worker:
+    container_name: celery_worker
+    restart: always
+    # platform: linux/arm64/v8
+    profiles:
+#      - dev #excluded from dev to facilitate gathering test coverage of tasks
+      - prod
+    image: cazlo/fastapi-async-task-workflow:latest
+    build:
+      context: ./backend
+      target: runtime
+    command: "watchfiles 'celery -A app.core.celery worker -l info -E' "
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    volumes:
+      - ./backend/app:/code:rwz
+      # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery"
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file: .env
+    networks:
+      - app
+  
+  celery_beat:  #Good for crontab and schedule tasks
+    container_name: celery_beat
+    restart: always
+    # platform: linux/arm64/v8
+    image: cazlo/fastapi-async-task-workflow:latest
+    build:
+      context: ./backend
+      target: runtime
+    command: celery -A app.core.celery beat -l info -l info
+    profiles:
+      - dev
+      - prod
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    volumes:
+      - ./backend/app:/opt/app:rwz
+      # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery-beat"
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file: .env
+    networks:
+      - app
 
   minio_server:
-    image: minio/minio:latest
+    image: docker.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
     restart: always
     container_name: minio_server
+    profiles:
+      - dev
+      - prod
     volumes:
       - ./minio/data:/data
     expose:
@@ -80,34 +212,76 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BROWSER_REDIRECT_URL: http://stash.localhost
-    command: "server /data --console-address ':9090'"    
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.minio.entrypoints=web
-      - traefik.http.routers.minio.service=minio
-      - traefik.http.routers.minio.rule=Host(`storage.${LOCAL_1}`, `storage.${LOCAL_2}`, `storage.${EXT_ENDPOINT1}`)      
-      - traefik.http.services.minio.loadbalancer.server.port=9000
-      - traefik.http.routers.minio-console.entrypoints=web
-      - traefik.http.routers.minio-console.service=minio-console
-      - traefik.http.routers.minio-console.rule=Host(`stash.${LOCAL_1}`, `stash.${LOCAL_2}`, `stash.${EXT_ENDPOINT1}`)      
-      - traefik.http.services.minio-console.loadbalancer.server.port=9090
+    command: "server /data --console-address ':9090'"
+    networks:
+      - app
 
-  traefik-proxy:
-    container_name: traefik-proxy
+  caddy_reverse_proxy:
+    container_name: caddy_reverse_proxy
+    image: docker.io/caddy:2.10-alpine
     restart: always
-    image: "traefik:latest"
-    command:
-      - "--providers.docker=true"
     ports:
-      - "80:80"
+      - 80:80
+      - 443:443
+    cap_add:
+      - NET_BIND_SERVICE
+    
+    networks:
+      app:
+        aliases:
+          - storage.localhost
+    environment:
+      - EXT_ENDPOINT1=${EXT_ENDPOINT1}
+      - LOCAL_1=${LOCAL_1}
+      - LOCAL_2=${LOCAL_2}
+    profiles:
+      - dev
+      - prod
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - ./traefik/traefik.yml:/traefik.yml:ro
-      - ./traefik/.htpasswd:/.htpasswd
-      - "${EB_LOG_BASE_DIR:-./traefik}/traefik-proxy:/logs"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.${LOCAL_1}`, `traefik.${LOCAL_2}`, `traefik.${EXT_ENDPOINT1}`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.usersfile=/.htpasswd"
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./static:/code/static
+      - caddy_data:/data
+      - caddy_config:/config
+
+  sonarqube:
+    container_name: "sonarqube"
+    image: docker.io/sonarqube:9.9.2-community
+    volumes:
+      - ./sonarqube/extensions:/opt/sonarqube/extensions
+      - ./sonarqube/logs:/opt/sonarqube/logs
+      - ./sonarqube/data:/opt/sonarqube/data
+    profiles:
+      - sast
+    expose:
+      - "9000"
+    ports:
+      - "9000:9000"
+    networks:
+      - app
+
+  docs:
+      container_name: docs
+      image: cazlo/fastapi-async-task-workflow-docs:latest
+      build:
+        context: ./docs
+      profiles:
+        - docs
+      ports:
+        - 8008:8008
+      command: ["mkdocs", "serve", "-a", "0.0.0.0:8008"]
+      user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+      volumes:
+        - ./docs:/opt/app/docs
+        - ./docs/adr_theme:/opt/app/docs/adr_theme
+        - ./tmp:/opt/app/tmp:rwz
+        - ./reports/docs-site:/opt/app/site:rwz
+
+volumes:
+  db_docker:
+  caddy_data:
+  caddy_config:
+  rabbitmq_data:
+  celery_worker_data:
+
+networks:
+  app:

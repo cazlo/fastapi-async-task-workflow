@@ -1,0 +1,100 @@
+name: Unit test suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+# commented permission only needed for private repository
+#  contents: read
+#  issues: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Setup .env
+        run: |
+          touch .env && make init-env
+      - name: Start Development Environment
+        id: dev-environment
+        run: make run-dev-build -e DOCKER_COMPOSE_OPTIONS="-d"
+        continue-on-error: true
+
+      - name: Capture Container Logs
+        if: steps.dev-environment.outcome == 'failure'
+        run: |
+          mkdir -p logs
+          docker compose --profile dev logs > logs/docker-compose.log
+          echo "::error::Development environment failed to start - check uploaded logs"
+
+      - name: Upload Container Logs
+        uses: actions/upload-artifact@v4
+        if: steps.dev-environment.outcome == 'failure'
+        with:
+          name: container-logs
+          path: logs/docker-compose.log
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: Fail if Dev Environment Failed
+        if: steps.dev-environment.outcome == 'failure'
+        run: exit 1
+
+      - name: Initialize Database
+        run: make init-db
+
+      - name: Run Tests
+        run: make pytest
+
+      # human-readable report
+      - name: Upload HTML Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html-report
+          path: reports/coverage
+          retention-days: 14
+
+      # useful for tools like SonarQube
+      - name: Upload XML Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml-report
+          path: reports/coverage.xml
+          retention-days: 14
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          test_file_prefix: "+backend/app"
+          files: |
+            reports/junit-test-results.xml
+
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: reports/coverage.xml
+          badge: false
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
