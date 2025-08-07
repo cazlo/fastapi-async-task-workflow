@@ -89,7 +89,7 @@ run-dev:
 	docker compose -f docker-compose.yml --profile dev up
 
 stop-dev:
-	docker compose -f docker-compose.yml --profile dev down
+	docker compose -f docker-compose.yml --profile dev down -v --remove-orphans
 
 run-prod:
 	docker compose --profile prod up --build
