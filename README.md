@@ -1,5 +1,6 @@
 # FastAPI Async Task Workflow Example
 
+
 A blueprint for a common pattern for asychronous task processing using a REST API as an entrypoint.
 
 ```mermaid
