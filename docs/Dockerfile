@@ -1,4 +1,4 @@
-FROM python:3.11-bookworm AS py-build
+FROM python:3.13-bookworm AS py-build
 
 ENV DEBIAN_FRONTEND noninteractive
 
