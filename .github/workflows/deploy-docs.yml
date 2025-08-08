@@ -37,7 +37,7 @@ jobs:
           cp -r ./reports/docs-site ./_site
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
