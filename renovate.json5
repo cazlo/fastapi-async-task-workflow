@@ -5,8 +5,12 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": ["minor"],
       "automerge": false
+    },
+    {
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
     }
   ],
   "schedule": ["every weekend"],
