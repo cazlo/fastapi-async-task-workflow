@@ -1,7 +1,7 @@
 name: Renovate
 on:
   schedule:
-    - cron: '0 3 * * 0' # Run at 3 AM every Sunday
+    - cron: '42 * * * *' # once per hour
   workflow_dispatch: # Allow manual triggering
 
 concurrency:
