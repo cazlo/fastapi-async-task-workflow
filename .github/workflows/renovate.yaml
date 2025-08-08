@@ -3,9 +3,6 @@ on:
   schedule:
     - cron: '0 3 * * 0' # Run at 3 AM every Sunday
   workflow_dispatch: # Allow manual triggering
-  push: # todo delete before merge
-    branches:
-      - renovate
 
 concurrency:
   group: ${{ github.workflow }}
