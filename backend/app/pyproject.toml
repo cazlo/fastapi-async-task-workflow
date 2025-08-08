@@ -51,7 +51,7 @@ SQLAlchemy = "^2.0.23"
 fastapi-pagination = {extras = ["sqlalchemy"], version = "^0.12.21"}
 fastapi-cache2 = "^0.2.1"
 minio = "^7.2.0"
-Pillow = "^10.1.0"
+Pillow = "^11.0.0"
 watchfiles = "^1.0.5"
 asyncer = "0.0.5"
 pandas = "^2.1.4"
