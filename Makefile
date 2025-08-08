@@ -108,7 +108,7 @@ formatter:
 
 lint:
 	cd backend/app && \
-	poetry run ruff app && poetry run black --check app
+	poetry run ruff check app && poetry run black --check app
 
 mypy:
 	cd backend/app && \
@@ -116,11 +116,11 @@ mypy:
 
 lint-watch:
 	cd backend/app && \
-	poetry run ruff app --watch
+	poetry run ruff check app --watch
 
 lint-fix:
 	cd backend/app && \
-	poetry run ruff app --fix
+	poetry run ruff format app
 
 run-sonarqube:
 	docker compose -f docker-compose.yml --profile sast up
