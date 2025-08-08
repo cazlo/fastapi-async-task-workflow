@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": false
+    }
+  ],
+  "schedule": ["every weekend"],
+  onboarding: false,
+  requireConfig: "ignored",
+  platform: "github",
+  repositories: ["cazlo/fastapi-async-task-workflow"],
+  prConcurrentLimit: 0,
+  prHourlyLimit: 5,
+  semanticCommits: "enabled",
+  enabledManagers: [
+    // https://docs.renovatebot.com/modules/manager/#supported-managers
+    "github-actions",
+//    "pep621", // for uv
+    "poetry",
+    "dockerfile",
+    "custom.regex", // expected future
+  ],
+}
