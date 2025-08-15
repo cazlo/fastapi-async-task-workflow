@@ -29,11 +29,12 @@
     "poetry",
     "dockerfile",
     "docker-compose",
-    "custom.regex", // expected future
+    "custom.regex",
   ],
-  "regexManagers": [
+  customManagers: [
     {
-      "fileMatch": ["/^Dockerfile$/"],
+      customType: 'regex',
+      "managerFilePatterns": ["/.*(d|D)ockerfile$/"],
       "matchStrings": [
         "#\\s*renovate:\\s*datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sENV .*?_VERSION=\"(?<currentValue>.*)\"\\s"
       ],
