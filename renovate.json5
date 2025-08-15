@@ -30,4 +30,24 @@
     "dockerfile",
     "custom.regex", // expected future
   ],
+  "regexManagers": [
+    {
+      "fileMatch": ["^.*Dockerfile$"],
+      "matchStrings": [
+        "RUN pip install (?<depName>[a-zA-Z0-9_-]+)(?:==(?<currentValue>[^\\s]+))?",
+        "RUN pip3 install (?<depName>[a-zA-Z0-9_-]+)(?:==(?<currentValue>[^\\s]+))?"
+      ],
+      "datasourceTemplate": "pypi",
+      "versioningTemplate": "pep440"
+    },
+    {
+      "fileMatch": ["^.*Dockerfile$"],
+      "matchStrings": [
+        "RUN apk add (?:--[a-z-]+ )*(?<depName>[a-zA-Z0-9_-]+)(?:=(?<currentValue>[^\\s]+))?"
+      ],
+      "datasourceTemplate": "repology",
+      "depNameTemplate": "alpine_3_21/{{depName}}",
+      "versioningTemplate": "loose"
+    }
+  ]
 }
