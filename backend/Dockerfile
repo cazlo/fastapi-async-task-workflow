@@ -13,7 +13,10 @@ WORKDIR /opt/app
 
 # Install Poetry
 RUN apk update
-RUN pip install poetry && poetry config virtualenvs.create false
+# renovate: datasource=pypi depName=poetry versioning=pep440
+ENV POETRY_VERSION="1.7.1"
+RUN pip install poetry=="${POETRY_VERSION}" && \
+     poetry config virtualenvs.create false
 
 # Copy poetry.lock* in case it doesn't exist in the repo
 COPY app/pyproject.toml app/poetry.lock* /opt/app/
@@ -39,8 +42,18 @@ USER appuser
 FROM runtime AS test
 USER root
 
+# renovate: datasource=repology depName=alpine_3_21/gcc versioning=loose
+ENV GCC_VERSION="14.2.0-r4"
+# renovate: datasource=repology depName=alpine_3_21/musl-dev versioning=loose
+ENV MUSL_DEV_VERSION="1.2.5-r9"
+# renovate: datasource=repology depName=alpine_3_21/linux-headers versioning=loose
+ENV LINUX_HEADERS_VERSION="6.6-r1"
+
 # Install dependencies needed for testing
-RUN apk add --no-cache gcc musl-dev linux-headers
+RUN apk add --no-cache  \
+    gcc="${GCC_VERSION}" \
+    musl-dev="${MUSL_DEV_VERSION}" \
+    linux-headers="${LINUX_HEADERS_VERSION}"
 
 # Install all dependencies including dev dependencies
 RUN poetry install --no-root
