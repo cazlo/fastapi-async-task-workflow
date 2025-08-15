@@ -17,7 +17,7 @@ ENV PLANTUML_MARKDOWN_VERSION="3.11.1"
 # Install PlantUML Markdown and all Dependencies for local build of images
 RUN pip install plantuml-markdown==${PLANTUML_MARKDOWN_VERSION}
 
-# renovate: datasource=repology depName=debian_12/openjdk-17-jre-headless versioning=loose
+# renovate: datasource=repology depName=debian_12/openjdk-17 versioning=loose
 ENV OPENJDK_VERSION="17.0.16+8-1~deb12u1"
 # renovate: datasource=repology depName=debian_12/graphviz versioning=loose
 ENV GRAPHVIZ_VERSION="2.42.2-7+deb12u1"
