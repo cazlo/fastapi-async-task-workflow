@@ -28,6 +28,7 @@
 //    "pep621", // for uv
     "poetry",
     "dockerfile",
+    "docker-compose",
     "custom.regex", // expected future
   ],
   "regexManagers": [
