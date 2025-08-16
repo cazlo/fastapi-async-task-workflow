@@ -14,7 +14,7 @@ WORKDIR /opt/app
 # Install Poetry
 RUN apk update
 # renovate: datasource=pypi depName=poetry versioning=pep440
-ENV POETRY_VERSION="1.7.1"
+ENV POETRY_VERSION="2.1.4"
 RUN pip install poetry=="${POETRY_VERSION}" && \
      poetry config virtualenvs.create false
 
