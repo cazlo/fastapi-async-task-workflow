@@ -245,7 +245,7 @@ services:
 
   sonarqube:
     container_name: "sonarqube"
-    image: docker.io/sonarqube:9.9.2-community
+    image: docker.io/sonarqube:10.7.0-community
     volumes:
       - ./sonarqube/extensions:/opt/sonarqube/extensions
       - ./sonarqube/logs:/opt/sonarqube/logs
