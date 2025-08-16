@@ -34,7 +34,7 @@ dependencies = [
     "fastapi-limiter>=0.1.5,<0.2.0",
     "pyjwt[crypto]>=2.8.0,<3.0.0",
     "gunicorn>=23.0.0,<24.0.0",
-    "uuid6==2024.7.10",
+    "uuid6==2025.0.1",
 ]
 
 [dependency-groups]
