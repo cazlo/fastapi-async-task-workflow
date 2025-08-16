@@ -2,8 +2,8 @@ services:
   fastapi_server_tmpl:
     image: cazlo/fastapi-async-task-workflow:latest
     restart: always
-    expose:
-      - 8000
+    ports:
+      - 8000:8000
     env_file: ".env"
     profiles:
       - template
@@ -42,7 +42,7 @@ services:
       target: test
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     volumes:
-      - ./backend/app:/opt/app:rwz
+#      - ./backend/app:/opt/app:rwz
       - ./reports:/home/appuser:rwz
     environment:
       MODE: testing
@@ -63,12 +63,12 @@ services:
       - prod
     env_file: ".env"
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
-    volumes:
-      - ./backend/app:/opt/app:rwz
+#    volumes:
+#      - ./backend/app:/opt/app:rwz
     depends_on:
       database:
         condition: service_healthy
-    command: "sh -c 'alembic upgrade head'"
+    command: "alembic upgrade head"
     networks:
       - app
 
@@ -159,8 +159,8 @@ services:
       target: runtime
     command: "watchfiles 'celery -A app.core.celery worker -l info -E' "
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
-    volumes:
-      - ./backend/app:/code:rwz
+#    volumes:
+#      - ./backend/app:/code:rwz
       # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery"
     depends_on:
       database:
@@ -184,8 +184,8 @@ services:
       - dev
       - prod
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
-    volumes:
-      - ./backend/app:/opt/app:rwz
+#    volumes:
+#      - ./backend/app:/opt/app:rwz
       # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery-beat"
     depends_on:
       database:

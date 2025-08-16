@@ -1,8 +1,58 @@
-[tool.poetry]
+[project]
 name = "app"
 version = "0.2.0"
 description = ""
-authors = ["jonra1993 <jon_ra@hotmail.es>", "cazlo <cazlo@users.noreply.github.com>"]
+requires-python = ">3.10,<3.14"
+authors = [
+  { name = "jonra1993", email = "jon_ra@hotmail.es" },
+  { name = "cazlo", email = "cazlo@users.noreply.github.com" }
+]
+dependencies = [
+    "alembic>=1.13.0,<2.0.0",
+    "asyncpg>=0.30.0,<0.31.0",
+    "fastapi[all]>=0.116.0,<0.117.0",
+    "sqlmodel==0.0.24",  # intentionally not doing ^ until non-0 minor version released
+    "cryptography>=45.0.0,<46.0.0",
+    "bcrypt>=4.1.1,<5.0.0",
+    "SQLAlchemy-Utils>=0.41.1,<0.42.0",
+    "SQLAlchemy>=2.0.23,<3.0.0",
+    "fastapi-pagination[sqlalchemy]>=0.13.0,<0.14.0",
+    "fastapi-cache2>=0.2.1,<0.3.0",
+    "minio>=7.2.0,<8.0.0",
+    "Pillow>=11.0.0,<12.0.0",
+    "watchfiles>=1.0.5,<2.0.0",
+    "asyncer==0.0.8",
+    "pandas>=2.1.4,<3.0.0",
+    "openpyxl>=3.1.2,<4.0.0",
+    "redis>=6.0.0,<7.0.0",
+    "fastapi-async-sqlalchemy>=0.6.0,<0.7.0",
+    "celery>=5.3.6,<6.0.0",
+    "psycopg2-binary>=2.9.5,<3.0.0",
+    "requests>=2.31.0,<3.0.0",
+    "wheel>=0.45.0,<0.46.0",
+    "setuptools>=80.4.0,<81.0.0",
+    "fastapi-limiter>=0.1.5,<0.2.0",
+    "pyjwt[crypto]>=2.8.0,<3.0.0",
+    "gunicorn>=23.0.0,<24.0.0",
+    "uuid6==2024.7.10",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0,<26.0.0",
+    "ruff>=0.12.0,<0.13.0",
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-asyncio>=1.0.0,<2.0.0",
+    "mypy>=1.5.0,<2.0.0",
+    "pytest-cov>=6.1.1,<7.0.0",
+    "gevent>=25.4.2,<26.0.0",
+    "celery[pytest]>=5.3.6,<6.0.0",
+    "asgi-lifespan>=2.1.0,<3.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 88
@@ -37,52 +87,6 @@ warn_unused_configs = true
 ignore_missing_imports = true
 exclude = ["alembic", "__pycache__"]
 
-
-[tool.poetry.dependencies]
-python = ">3.10,<3.14"
-alembic = "^1.13.0"
-asyncpg = "^0.30.0"
-fastapi = {extras = ["all"], version = "^0.116.0"}
-sqlmodel = "0.0.24" # intentionally not doing ^ until non-0 minor version released
-cryptography = "^45.0.0"
-bcrypt = "^4.1.1"
-SQLAlchemy-Utils = "^0.41.1"
-SQLAlchemy = "^2.0.23"
-fastapi-pagination = {extras = ["sqlalchemy"], version = "^0.13.0"}
-fastapi-cache2 = "^0.2.1"
-minio = "^7.2.0"
-Pillow = "^11.0.0"
-watchfiles = "^1.0.5"
-asyncer = "0.0.8"
-pandas = "^2.1.4"
-openpyxl = "^3.1.2"
-redis = "^6.0.0"
-fastapi-async-sqlalchemy = "^0.6.0"
-celery = "^5.3.6"
-psycopg2-binary = "^2.9.5"
-requests = "^2.31.0"
-wheel = "^0.45.0"
-setuptools = "^80.4.0"
-fastapi-limiter = "^0.1.5"
-pyjwt = {extras = ["crypto"], version = "^2.8.0"}
-gunicorn = "^23.0.0"
-uuid6 = "v2024.7.10"
-
-[tool.poetry.group.dev.dependencies]
-black = "^25.1.0"
-ruff = "^0.12.0"
-pytest = "^8.0.0"
-pytest-asyncio = "^1.0.0"
-mypy = "^1.5.0"
-pytest-cov = "^6.1.1"
-gevent = "^25.4.2"
-celery = {version = "^5.3.6", extras = ["pytest"]}
-asgi-lifespan = "^2.1.0"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.coverage.run]
 # https://stackoverflow.com/questions/68826941/python-coverage-for-async-methods
 concurrency = ["thread","gevent"]
@@ -96,3 +100,4 @@ exclude_also = [
     '@(abc\.)?abstractmethod',
     "def __repr__"
 ]
+

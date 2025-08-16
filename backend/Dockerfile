@@ -11,33 +11,48 @@ RUN mkdir -p /opt/app && chown -R appuser:appgroup /opt/app
 # Set working directory
 WORKDIR /opt/app
 
-# Install Poetry
-RUN apk update
-# renovate: datasource=pypi depName=poetry versioning=pep440
-ENV POETRY_VERSION="1.7.1"
-RUN pip install poetry=="${POETRY_VERSION}" && \
-     poetry config virtualenvs.create false
+# Install uv
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
+COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /uvx /bin/
 
-# Copy poetry.lock* in case it doesn't exist in the repo
-COPY app/pyproject.toml app/poetry.lock* /opt/app/
-RUN chown -R appuser:appgroup /opt/app
+# Ensure venv binaries are on PATH for runtime
+ENV PATH="/opt/app/.venv/bin:$PATH"
+
+# Compile bytecode
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#compiling-bytecode
+ENV UV_COMPILE_BYTECODE=1
+
+# uv Cache
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#caching
+ENV UV_LINK_MODE=copy
+
+USER appuser
 
 # Install dependencies
-RUN poetry install --no-root --only main
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
+RUN --mount=type=bind,source=app/uv.lock,target=uv.lock \
+    --mount=type=bind,source=app/pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev
+
+ENV PYTHONPATH=/opt/app
 
 # Copy application code
-COPY app/alembic.ini app/poetry.lock app/pyproject.toml /opt/app/
-COPY app/alembic /opt/app
-COPY app/app /opt/app/app
-RUN chown -R appuser:appgroup /opt/app
+COPY --chown=appuser:appgroup app/alembic.ini app/pyproject.toml /opt/app/
+COPY --chown=appuser:appgroup app/alembic /opt/app/alembic
+COPY --chown=appuser:appgroup app/app /opt/app/app
 
-RUN poetry install --only main
+# Sync the project
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
+RUN --mount=type=bind,source=app/uv.lock,target=uv.lock \
+  uv sync --frozen --no-dev
+
+#RUN chown -R appuser:appgroup /opt/app/.venv
 
 #ENV PYTHONPATH=/opt/app
 EXPOSE 8000
 
 # Switch to non-root user
-USER appuser
+#USER appuser
 
 FROM runtime AS test
 USER root
@@ -55,10 +70,18 @@ RUN apk add --no-cache  \
     musl-dev="${MUSL_DEV_VERSION}" \
     linux-headers="${LINUX_HEADERS_VERSION}"
 
-# Install all dependencies including dev dependencies
-RUN poetry install --no-root
+# allow coverage to write here for tests
+RUN chown appuser:appgroup /opt/app
 
-COPY app/test /opt/app/test
+USER appuser
+
+# Install all dependencies including dev dependencies
+RUN --mount=type=bind,source=app/uv.lock,target=uv.lock \
+  uv sync --frozen --group dev
+
+COPY --chown=appuser:appgroup app/test /opt/app/test
+
+ENV PATH="/opt/app/.venv/bin:$PATH"
 
 # Switch back to non-root user for running tests
 USER appuser

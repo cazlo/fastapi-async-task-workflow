@@ -23,7 +23,7 @@ export SERVERS_JSON
 help:
 	@echo "make"
 	@echo "    install"
-	@echo "        Install all packages of poetry project locally."
+	@echo "        Install all packages of the project locally using uv."
 	@echo "    run-dev-build"
 	@echo "        Run development docker compose and force build containers."
 	@echo "    run-dev"
@@ -65,7 +65,7 @@ help:
 
 install:
 	cd backend/app && \
-	poetry install
+	uv sync --all-groups
 
 init-env:
 	cp .env.example .env && \
@@ -104,23 +104,23 @@ init-db:
 
 formatter:
 	cd backend/app && \
-	poetry run black app
+	uv run black app
 
 lint:
 	cd backend/app && \
-	poetry run ruff check app && poetry run black --check app
+	uv run ruff check app && uv run black --check app
 
 mypy:
 	cd backend/app && \
-	poetry run mypy .
+	uv run mypy .
 
 lint-watch:
 	cd backend/app && \
-	poetry run ruff check app --watch
+	uv run ruff check app --watch
 
 lint-fix:
 	cd backend/app && \
-	poetry run ruff format app
+	uv run ruff format app
 
 run-sonarqube:
 	docker compose -f docker-compose.yml --profile sast up
@@ -155,7 +155,10 @@ REPORT_DIR = /home/appuser
 PYTEST_FLAGS = -v -s --junitxml=$(REPORT_DIR)/junit-test-results.xml
 COVERAGE_FLAGS = --cov=. --cov-report=term-missing --cov-report=xml:$(REPORT_DIR)/coverage.xml --cov-report=html:$(REPORT_DIR)/coverage
 pytest:
-	docker compose -f docker-compose.yml exec fastapi_server pytest $(PYTEST_FLAGS) $(COVERAGE_FLAGS)
+	docker compose -f docker-compose.yml exec \
+		-e COVERAGE_FILE=/home/appuser/.coverage \
+		fastapi_server \
+		pytest $(PYTEST_FLAGS) $(COVERAGE_FLAGS)
 
 clean:
 	rm -rf tmp && \
