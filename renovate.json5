@@ -25,8 +25,7 @@
   enabledManagers: [
     // https://docs.renovatebot.com/modules/manager/#supported-managers
     "github-actions",
-//    "pep621", // for uv
-    "poetry",
+    "pep621", // for uv
     "dockerfile",
     "docker-compose",
     "custom.regex",
