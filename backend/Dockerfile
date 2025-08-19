@@ -1,4 +1,4 @@
-FROM docker.io/python:3.13-alpine3.21 AS runtime
+FROM docker.io/python:3.13-alpine3.21@sha256:0c3d4f28025c9adc2c03326aa160dde8f53faaa8684134a0e146e4edca28a946 AS runtime
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DEFAULT_TIMEOUT=100
 
@@ -13,7 +13,7 @@ WORKDIR /opt/app
 
 # Install uv
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
-COPY --from=ghcr.io/astral-sh/uv:0.8.12 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.8.12@sha256:f64ad69940b634e75d2e4d799eb5238066c5eeda49f76e782d4873c3d014ea33 /uv /uvx /bin/
 
 # Ensure venv binaries are on PATH for runtime
 ENV PATH="/opt/app/.venv/bin:$PATH"
