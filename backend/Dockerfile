@@ -13,7 +13,7 @@ WORKDIR /opt/app
 
 # Install uv
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
-COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.8.12 /uv /uvx /bin/
 
 # Ensure venv binaries are on PATH for runtime
 ENV PATH="/opt/app/.venv/bin:$PATH"
