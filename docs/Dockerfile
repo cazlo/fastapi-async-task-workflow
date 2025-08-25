@@ -39,7 +39,7 @@ ENV MKDOCS_MERMAID2_VERSION="1.2.1"
 RUN pip install mkdocs-mermaid2-plugin==${MKDOCS_MERMAID2_VERSION}
 
 # renovate: datasource=pypi depName=mkdocs-material versioning=pep440
-ENV MKDOCS_MATERIAL_VERSION="9.6.17"
+ENV MKDOCS_MATERIAL_VERSION="9.6.18"
 # Install MkDocs as dependency for proper pallete-specific diagram color rendering + nicer ubjectively CSS overall
 RUN pip install mkdocs-material==${MKDOCS_MATERIAL_VERSION}
 
