@@ -34,12 +34,12 @@ RUN echo "#!/bin/bash" > /usr/local/bin/plantuml && \
     chmod 755 /usr/local/bin/plantuml /opt/plantuml/plantuml.jar
 
 # renovate: datasource=pypi depName=mkdocs-mermaid2-plugin versioning=pep440
-ENV MKDOCS_MERMAID2_VERSION="1.2.1"
+ENV MKDOCS_MERMAID2_VERSION="1.2.2"
 # Install mermaid2 plugin
 RUN pip install mkdocs-mermaid2-plugin==${MKDOCS_MERMAID2_VERSION}
 
 # renovate: datasource=pypi depName=mkdocs-material versioning=pep440
-ENV MKDOCS_MATERIAL_VERSION="9.6.17"
+ENV MKDOCS_MATERIAL_VERSION="9.6.18"
 # Install MkDocs as dependency for proper pallete-specific diagram color rendering + nicer ubjectively CSS overall
 RUN pip install mkdocs-material==${MKDOCS_MATERIAL_VERSION}
 

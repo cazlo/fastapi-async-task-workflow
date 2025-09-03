@@ -117,7 +117,7 @@ requires-dist = [
     { name = "fastapi-async-sqlalchemy", specifier = ">=0.6.0,<0.7.0" },
     { name = "fastapi-cache2", specifier = ">=0.2.1,<0.3.0" },
     { name = "fastapi-limiter", specifier = ">=0.1.5,<0.2.0" },
-    { name = "fastapi-pagination", extras = ["sqlalchemy"], specifier = ">=0.13.0,<0.14.0" },
+    { name = "fastapi-pagination", extras = ["sqlalchemy"], specifier = ">=0.14.1,<0.15.0" },
     { name = "gunicorn", specifier = ">=23.0.0,<24.0.0" },
     { name = "minio", specifier = ">=7.2.0,<8.0.0" },
     { name = "openpyxl", specifier = ">=3.1.2,<4.0.0" },
@@ -129,7 +129,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.31.0,<3.0.0" },
     { name = "setuptools", specifier = ">=80.4.0,<81.0.0" },
     { name = "sqlalchemy", specifier = ">=2.0.23,<3.0.0" },
-    { name = "sqlalchemy-utils", specifier = ">=0.41.1,<0.42.0" },
+    { name = "sqlalchemy-utils", specifier = ">=0.42.0,<0.43.0" },
     { name = "sqlmodel", specifier = "==0.0.24" },
     { name = "uuid6", specifier = "==2025.0.1" },
     { name = "watchfiles", specifier = ">=1.0.5,<2.0.0" },
@@ -910,16 +910,16 @@ wheels = [
 
 [[package]]
 name = "fastapi-pagination"
-version = "0.13.3"
+version = "0.14.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastapi" },
     { name = "pydantic" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/4c/e98a1665b6ac2e9e4ed98450e4e0ea48108f3bc52de517d9a70cc22761c2/fastapi_pagination-0.13.3.tar.gz", hash = "sha256:40c2383aff13a3a0e4a2742dfbf004572e88458cd8f338d85f90a27e07abab4a", size = 550898, upload-time = "2025-06-25T21:22:15.287Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/38/e27d94adb7050d88cddccddb56ab51244a2a9a30377eb5487de8f2b22959/fastapi_pagination-0.14.1.tar.gz", hash = "sha256:d045f8c678cef69ac006236f32a6d808ae6ca549360f79e92eefe2528f3e6337", size = 557666, upload-time = "2025-09-03T10:08:20.538Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/73/ef1ab892c2d189d8b6bd72325e9e710df6737c3b7976e12aa5749a56ea01/fastapi_pagination-0.13.3-py3-none-any.whl", hash = "sha256:e1b1cc7fa5c773c61087845ef8a73ed6b516071c057418698b9242461573f44e", size = 50986, upload-time = "2025-06-25T21:22:13.591Z" },
+    { url = "https://files.pythonhosted.org/packages/83/6e/7b6e63c3c004c4805fe8795f8355b30cc72f23aa2162f4072e6035ef1e84/fastapi_pagination-0.14.1-py3-none-any.whl", hash = "sha256:e5b698cab368b525f3b2ea2605c77dc22b00f50f67ac7d382dce8d3243fe60dc", size = 52534, upload-time = "2025-09-03T10:08:18.952Z" },
 ]
 
 [package.optional-dependencies]
@@ -2527,14 +2527,14 @@ wheels = [
 
 [[package]]
 name = "sqlalchemy-utils"
-version = "0.41.2"
+version = "0.42.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4d/bf/abfd5474cdd89ddd36dbbde9c6efba16bfa7f5448913eba946fed14729da/SQLAlchemy-Utils-0.41.2.tar.gz", hash = "sha256:bc599c8c3b3319e53ce6c5c3c471120bd325d0071fb6f38a10e924e3d07b9990", size = 138017, upload-time = "2024-03-24T15:17:28.196Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/63/80/4e15fdcfc25a2226122bf316f0ebac86d840ab3fb38b38ca4cabc395865e/sqlalchemy_utils-0.42.0.tar.gz", hash = "sha256:6d1ecd3eed8b941f0faf8a531f5d5cee7cffa2598fcf8163de8c31c7a417a5e0", size = 130531, upload-time = "2025-08-30T18:43:41.904Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/f0/dc4757b83ac1ab853cf222df8535ed73973e0c203d983982ba7b8bc60508/SQLAlchemy_Utils-0.41.2-py3-none-any.whl", hash = "sha256:85cf3842da2bf060760f955f8467b87983fb2e30f1764fd0e24a48307dc8ec6e", size = 93083, upload-time = "2024-03-24T15:17:24.533Z" },
+    { url = "https://files.pythonhosted.org/packages/52/86/21e97809b017a4ebc88971eea335130782421851b0ed8dc3ab6126b479f1/sqlalchemy_utils-0.42.0-py3-none-any.whl", hash = "sha256:c8c0b7f00f4734f6f20e9a4d06b39d79d58c8629cba50924fcaeb20e28eb4f48", size = 91744, upload-time = "2025-08-30T18:43:40.199Z" },
 ]
 
 [[package]]
