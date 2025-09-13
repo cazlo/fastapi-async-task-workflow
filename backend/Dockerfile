@@ -1,4 +1,4 @@
-FROM docker.io/python:3.13-alpine3.21 AS runtime
+FROM docker.io/python:3.13-alpine3.21@sha256:0c3d4f28025c9adc2c03326aa160dde8f53faaa8684134a0e146e4edca28a946 AS runtime
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DEFAULT_TIMEOUT=100
 
