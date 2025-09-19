@@ -27,7 +27,7 @@ RUN apt update && \
     rm -rf /var/lib/apt/lists/*
 ENV PLANTUML_JAVAOPTS="-Djava.awt.headless=true"
 # renovate: datasource=github-releases depName=plantuml/plantuml
-ENV PLANTUML_VERSION="1.2025.4"
+ENV PLANTUML_VERSION="1.2025.7"
 ADD https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar /opt/plantuml/plantuml.jar
 RUN echo "#!/bin/bash" > /usr/local/bin/plantuml && \
     echo 'java $PLANTUML_JAVAOPTS -jar /opt/plantuml/plantuml.jar ${@}' >> /usr/local/bin/plantuml && \
@@ -39,7 +39,7 @@ ENV MKDOCS_MERMAID2_VERSION="1.2.2"
 RUN pip install mkdocs-mermaid2-plugin==${MKDOCS_MERMAID2_VERSION}
 
 # renovate: datasource=pypi depName=mkdocs-material versioning=pep440
-ENV MKDOCS_MATERIAL_VERSION="9.6.19"
+ENV MKDOCS_MATERIAL_VERSION="9.6.20"
 # Install MkDocs as dependency for proper pallete-specific diagram color rendering + nicer ubjectively CSS overall
 RUN pip install mkdocs-material==${MKDOCS_MATERIAL_VERSION}
 
