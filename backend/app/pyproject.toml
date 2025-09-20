@@ -12,7 +12,7 @@ dependencies = [
     "asyncpg>=0.30.0,<0.31.0",
     "fastapi[all]>=0.116.0,<0.117.0",
     "sqlmodel==0.0.24",  # intentionally not doing ^ until non-0 minor version released
-    "cryptography>=45.0.0,<46.0.0",
+    "cryptography>=46.0.1,<46.1.0",
     "bcrypt>=4.1.1,<5.0.0",
     "SQLAlchemy-Utils>=0.42.0,<0.43.0",
     "SQLAlchemy>=2.0.23,<3.0.0",
