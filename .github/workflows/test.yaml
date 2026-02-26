@@ -37,7 +37,7 @@ jobs:
           echo "::error::Development environment failed to start - check uploaded logs"
 
       - name: Upload Container Logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         if: steps.dev-environment.outcome == 'failure'
         with:
           name: container-logs
@@ -57,7 +57,7 @@ jobs:
 
       # human-readable report
       - name: Upload HTML Coverage Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: coverage-html-report
           path: reports/coverage
@@ -65,7 +65,7 @@ jobs:
 
       # useful for tools like SonarQube
       - name: Upload XML Coverage Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: coverage-xml-report
           path: reports/coverage.xml
