@@ -47,7 +47,7 @@ RUN pip install mkdocs-material==${MKDOCS_MATERIAL_VERSION}
 #RUN pip install mkdocs-print-site-plugin
 
 # renovate: datasource=pypi depName=mkdocs-kroki-plugin versioning=pep440
-ENV MKDOCS_KROKI_VERSION="0.9.0"
+ENV MKDOCS_KROKI_VERSION="1.6.0"
 RUN pip install mkdocs-kroki-plugin==${MKDOCS_KROKI_VERSION}
 
 COPY mkdocs.yml .
