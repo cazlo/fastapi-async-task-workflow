@@ -19,7 +19,7 @@ dependencies = [
     "fastapi-pagination[sqlalchemy]>=0.14.1,<0.15.0",
     "fastapi-cache2>=0.2.1,<0.3.0",
     "minio>=7.2.0,<8.0.0",
-    "Pillow>=11.0.0,<12.0.0",
+    "Pillow>=12.3.0,<12.4.0",
     "watchfiles>=1.0.5,<2.0.0",
     "asyncer==0.0.8",
     "pandas>=2.1.4,<3.0.0",
