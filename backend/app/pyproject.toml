@@ -45,7 +45,7 @@ dev = [
     "pytest-asyncio>=1.0.0,<2.0.0",
     "mypy>=1.5.0,<2.0.0",
     "pytest-cov>=6.1.1,<7.0.0",
-    "gevent>=25.4.2,<26.0.0",
+    "gevent>=26.8.0,<26.9.0",
     "celery[pytest]>=5.3.6,<6.0.0",
     "asgi-lifespan>=2.1.0,<3.0.0",
 ]
