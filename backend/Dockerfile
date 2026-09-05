@@ -1,4 +1,4 @@
-FROM docker.io/python:3.13-alpine3.21 AS runtime
+FROM docker.io/python:3.14-alpine3.21@sha256:fd8407cacb1028c803566276ae25eb7c2a00fbaa210a0a5670994f6866e29278 AS runtime
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DEFAULT_TIMEOUT=100
 
@@ -13,7 +13,7 @@ WORKDIR /opt/app
 
 # Install uv
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
-COPY --from=ghcr.io/astral-sh/uv:0.8.15@sha256:1eca97b33175f9c0896ec34f30e03ba0227efd8e38a9a0f6d12c6003eacb6faa /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.12.10@sha256:2bb3ebca0a796a155094a27773d290c4b074572e6107f171d88d086682fd2500 /uv /uvx /bin/
 
 # Ensure venv binaries are on PATH for runtime
 ENV PATH="/opt/app/.venv/bin:$PATH"
@@ -60,7 +60,7 @@ USER root
 # renovate: datasource=repology depName=alpine_3_21/gcc versioning=loose
 ENV GCC_VERSION="14.2.0-r4"
 # renovate: datasource=repology depName=alpine_3_21/musl-dev versioning=loose
-ENV MUSL_DEV_VERSION="1.2.5-r9"
+ENV MUSL_DEV_VERSION="1.2.5-r11"
 # renovate: datasource=repology depName=alpine_3_21/linux-headers versioning=loose
 ENV LINUX_HEADERS_VERSION="6.6-r1"
 
