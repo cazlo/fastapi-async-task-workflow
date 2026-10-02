@@ -1,4 +1,4 @@
-FROM python:3.13-bookworm AS py-build
+FROM python:3.13-bookworm@sha256:ab62bdaec8f090e565b8c76a8cac990229c28a42725f356cc32d9f4dea29806d AS py-build
 
 ENV DEBIAN_FRONTEND noninteractive
 
