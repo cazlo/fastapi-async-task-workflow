@@ -73,7 +73,7 @@ services:
       - app
 
   database:
-     image: docker.io/postgres:17
+     image: docker.io/postgres:19@sha256:bb6e70add742cd868fb62cb3b2f67d1dd2bdd2b65a521e778420748753687c60
      restart: always
      container_name: database
      env_file: ".env"
